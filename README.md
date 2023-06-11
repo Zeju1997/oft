@@ -1,4 +1,4 @@
-# Project Title
+# Controlling Text-to-Image Diffusion by Orthogonal Finetuning
 
 ## Description
 
