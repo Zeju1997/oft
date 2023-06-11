@@ -18,11 +18,11 @@ Stay tuned, more information and code coming soon.
 
 ## Installation
 
-(Coming soon...) Here you'll explain how to install and setup your project.
+(Coming soon...) 
 
 ## Usage 
 
-(Coming soon...) Here you can show examples of how to use your project, preferably with screenshots or code snippets.
+(Coming soon...) 
 
 ## Contributing
 
