@@ -26,7 +26,6 @@ Stay tuned, more information and code coming soon.
 
 ## Contributing
 
-If you wish to contribute to this project, feel free to fork the repository and submit a pull request. We're always looking forward to improving this project and appreciate all the help we can get!
 
 ## License
 
