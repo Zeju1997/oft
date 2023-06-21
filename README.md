@@ -6,16 +6,12 @@ Large text-to-image diffusion models have impressive capabilities in generating 
 
 Stay tuned, more information and code coming soon.
 
-## Table of Contents
+## To-Do
 
-1. [Project Title](#project-title)
-2. [Description](#description)
-3. [Table of Contents](#table-of-contents)
-4. [Installation](#installation)
-5. [Usage](#usage)
-6. [Contributing](#contributing)
-7. [License](#license)
+- [x] Code for running controllable generation (ControlNet similar tasks)
+- [x] Code for running subject-driven generation (Dreambooth similar tasks)
 
+<!--
 ## Getting Started
 
 ### Downloading Data
@@ -55,21 +51,14 @@ data
 
 Follow these steps to set up the project environment:
 
-1. Create the conda environment:
+1. Clone the oft repository. We'll call the directory that you cloned oft as $OFT_ROOT.
 ```bash
-conda create --name oft python=3.9
-conda activate oft
+git clone https://github.com/Zeju1997/oft.git
 ```
-2. Install the required packages:
+
+2. Construct the virtual environment:
 ```bash
-conda create --name landmark python=3.9
-conda activate landmark
-pip install torch torchvision torchaudio
-pip install open_clip_torch==2.0.2 transformers==4.25.1 omegaconf==2.1.1 pytorch-lightning==1.5.0 gradio==3.16.2 basicsr==1.4.2
-pip install matplotlib einops opencv-python pytorch-fid timm fire safetensors pycocotools wandb scikit-image tqdm
-pip install torchmetrics[image]
-pip install face-alignment==1.3.4
-# pip install -r requirements.txt
+conda env create -f environment.yml
 ```
 
 ## Usage 
@@ -87,6 +76,8 @@ python oft-control/train.py
 #### 
 
 ### Subject-driven Generation
+
+-->
 
 ## Contributing
 

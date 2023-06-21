@@ -1,0 +1,31 @@
+name: oft
+channels:
+  - defaults
+dependencies:
+  - python=3.9
+  - pip
+  - pip:
+    - torch
+    - torchvision
+    - torchaudio
+    - open_clip_torch==2.0.2
+    - transformers==4.25.1
+    - omegaconf==2.1.1
+    - pytorch-lightning==1.5.0
+    - gradio==3.16.2
+    - basicsr==1.4.2
+    - matplotlib
+    - einops
+    - opencv-python
+    - pytorch-fid
+    - timm
+    - fire
+    - safetensors
+    - pycocotools
+    - wandb
+    - scikit-image
+    - tqdm
+    - torchmetrics[image]
+    - face-alignment==1.3.4
+    - share
+
