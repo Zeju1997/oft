@@ -2,7 +2,6 @@
 *.log
 
 # Ignore folder
-data/
 lightning_logs/
 mmpose/
 experiments/
