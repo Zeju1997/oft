@@ -1,0 +1,6 @@
+# Ignore everything in this directory
+*
+# Except .yaml files
+!*.yaml
+# Except this file
+!.gitignore

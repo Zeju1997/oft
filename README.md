@@ -16,15 +16,88 @@ Stay tuned, more information and code coming soon.
 6. [Contributing](#contributing)
 7. [License](#license)
 
+## Getting Started
+
+### Downloading Data
+
+1. To download the data required for this project, visit the following link: [https://drive.google.com/drive/folders/1kB3x9KlmklRSeLu74VdH5MEaywvCMVdx?usp=sharing](https://drive.google.com/drive/folders/1kB3x9KlmklRSeLu74VdH5MEaywvCMVdx?usp=sharing)
+
+2. Store the downloaded data in the `data` directory.
+
+After downloading and placing the data, your directory structure should look like this:
+```
+data
+├── ADE20K
+│ ├── train
+│ │ ├── color
+│ │ ├── segm
+│ │ └── prompt_train_blip.json
+│ └── val
+│ │ ├── color
+│ │ ├── segm
+│ │ └── prompt_val_blip.json
+└── COCO
+│ ├── train
+│ │ ├── color
+│ │ ├── depth
+│ ...
+...
+```
+
+### Downloading pre-trained model weights
+
+1. To download the data required for this project, visit the following link: [v1-5-pruned.ckpt](https://huggingface.co/runwayml/stable-diffusion-v1-5/tree/main)
+
+2. Store the downloaded model weights in the `models` directory.
+
+
 ## Installation
 
-(Coming soon...) 
+Follow these steps to set up the project environment:
+
+1. Create the conda environment:
+```bash
+conda create --name oft python=3.9
+conda activate oft
+```
+2. Install the required packages:
+```bash
+conda create --name landmark python=3.9
+conda activate landmark
+pip install torch torchvision torchaudio
+pip install open_clip_torch==2.0.2 transformers==4.25.1 omegaconf==2.1.1 pytorch-lightning==1.5.0 gradio==3.16.2 basicsr==1.4.2
+pip install matplotlib einops opencv-python pytorch-fid timm fire safetensors pycocotools wandb scikit-image tqdm
+pip install torchmetrics[image]
+pip install face-alignment==1.3.4
+# pip install -r requirements.txt
+```
 
 ## Usage 
 
-(Coming soon...) 
+### Controllable Generation
+
+1. Create the model with additional oft parameters:
+```bash
+python oft-control/tool_add_control_oft.py ./models/v1-5-pruned.ckpt ./models/control_sd15_ini_oft.ckpt
+```
+2. Train the model (need to specify the control and dataset):
+```bash
+python oft-control/train.py
+```
+#### 
+
+### Subject-driven Generation
 
 ## Contributing
+
+
+## Acknowledgements
+
+This project builds upon the work of several other repositories. We would like to express our gratitude to the following projects for their contributions:
+
+- [lora](https://github.com/cloneofsimo/lora): Low-rank Adaptation for Fast Text-to-Image Diffusion Fine-tuning.
+- [ControlNet](https://github.com/lllyasviel/ControlNet): Official implementation of Adding Conditional Control to Text-to-Image Diffusion Models.
+- [Diffusers](https://github.com/huggingface/diffusers): A library for state-of-the-art pretrained diffusion models.
 
 
 ## License

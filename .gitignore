@@ -1,0 +1,27 @@
+# Ignore all .log files
+*.log
+
+# Ignore folder
+data/
+lightning_logs/
+mmpose/
+experiments/
+lora/
+ControlLoRA/
+data/celebhq-text/
+log2/
+SegFormer/
+
+# Ignore the 'build' folder
+build/
+
+# Ignore all .pyc files
+*.pyc
+*.txt
+*.jpg
+*.png
+*.pth
+*.mat
+*.pkl
+
+__pycache__
