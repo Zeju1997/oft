@@ -9,8 +9,8 @@ Stay tuned, more information and code coming soon.
 ## To-Do
 
 - [x] Code for running controllable generation (ControlNet-like tasks)
-- [] Code for running subject-driven generation (Dreambooth-like tasks)
-- [] Readme
+- [ ] Code for running subject-driven generation (Dreambooth-like tasks)
+- [ ] Readme
 
 We expect the first version of our code will be released on 23rd June. Thanks!
 
