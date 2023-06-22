@@ -63,11 +63,9 @@ def project_batch(R, eps=1e-5):
 
 class OFTInjectedLinear(nn.Module):
     def __init__(
-        self, in_features, out_features, bias=False, r=4, dropout_p=0.1, scale=1.0, dim=3
+        self, in_features, out_features, bias=False, r=4, eps=1e-5, is_coft=True, block_share=False,
     ):
         super().__init__()
-
-        r = 4
 
         assert in_features % r == 0, "in_features must be divisible by r"
 
@@ -84,13 +82,13 @@ class OFTInjectedLinear(nn.Module):
 
         # Define the reduction rate:
         self.r = r
+        self.is_coft = is_coft
 
         self.fix_filt_shape = [in_features, out_features]
 
-        eps = 1e-3
         # Define the trainable matrix parameter: R
-        self.dim = dim
-        if self.dim == 2:
+        self.block_share = block_share
+        if self.block_share:
             # Initialized as an identity matrix
             self.R_shape = [in_features // self.r, in_features // self.r]
             self.R = nn.Parameter(torch.zeros(self.R_shape[0], self.R_shape[0]), requires_grad=True)
@@ -108,13 +106,15 @@ class OFTInjectedLinear(nn.Module):
         orig_dtype = x.dtype
         dtype = self.R.dtype
 
-        if self.dim == 2:
-            with torch.no_grad():
-                self.R.copy_(project(self.R, eps=self.eps))
+        if self.block_share:
+            if self.is_coft:
+                with torch.no_grad():
+                    self.R.copy_(project(self.R, eps=self.eps))
             orth_rotate = self.cayley(self.R)
         else:
-            with torch.no_grad():
-                self.R.copy_(project_batch(self.R, eps=self.eps))
+            if self.is_coft:
+                with torch.no_grad():
+                    self.R.copy_(project_batch(self.R, eps=self.eps))
             orth_rotate = self.cayley_batch(self.R)
 
         # Block-diagonal parametrization
@@ -154,7 +154,7 @@ class OFTInjectedLinear(nn.Module):
         return Q
 
     def block_diagonal(self, R):
-        if self.dim == 2:
+        if self.block_share:
             # Create a list of R repeated block_count times
             blocks = [R] * self.r
         else:
@@ -184,11 +184,9 @@ class OFTInjectedLinear(nn.Module):
 
 class OFTInjectedLinear_with_norm(nn.Module):
     def __init__(
-        self, in_features, out_features, bias=False, r=4, dropout_p=0.1, scale=1.0, dim=3
+        self, in_features, out_features, bias=False, r=4, eps=1e-5, is_coft=True, block_share=False,
     ):
         super().__init__()
-
-        r = 4
 
         assert in_features % r == 0, "in_features must be divisible by r"
 
@@ -205,6 +203,7 @@ class OFTInjectedLinear_with_norm(nn.Module):
 
         # Define the reduction rate:
         self.r = r
+        self.is_coft = is_coft
 
         #self.filt_shape = [in_features, in_features]
         self.fix_filt_shape = [in_features, out_features]
@@ -212,10 +211,9 @@ class OFTInjectedLinear_with_norm(nn.Module):
         # Define the scaling factors
         self.scaling_factors = nn.Parameter(torch.ones(out_features, 1))
 
-        eps = 1e-3
         # Define the trainable matrix parameter: R
-        self.dim = dim
-        if self.dim == 2:
+        self.block_share=block_share
+        if self.block_share:
             # Initialized as an identity matrix
             self.R_shape = [in_features // self.r, in_features // self.r]
             self.R = nn.Parameter(torch.zeros(self.R_shape[0], self.R_shape[0]), requires_grad=False)
@@ -233,13 +231,15 @@ class OFTInjectedLinear_with_norm(nn.Module):
         orig_dtype = x.dtype
         dtype = self.R.dtype
 
-        if self.dim == 2:
-            with torch.no_grad():
-                self.R.copy_(project(self.R, eps=self.eps))
+        if self.block_share:
+            if self.is_coft:
+                with torch.no_grad():
+                    self.R.copy_(project(self.R, eps=self.eps))
             orth_rotate = self.cayley(self.R)
         else:
-            with torch.no_grad():
-                self.R.copy_(project_batch(self.R, eps=self.eps))
+            if self.is_coft:
+                with torch.no_grad():
+                    self.R.copy_(project_batch(self.R, eps=self.eps))
             orth_rotate = self.cayley_batch(self.R)
 
         # Block-diagonal parametrization
@@ -283,7 +283,7 @@ class OFTInjectedLinear_with_norm(nn.Module):
         return Q
 
     def block_diagonal(self, R):
-        if self.dim == 2:
+        if self.block_share:
             # Create a list of R repeated block_count times
             blocks = [R] * self.r
         else:
@@ -312,7 +312,7 @@ class OFTInjectedLinear_with_norm(nn.Module):
 
 
 class OFTInjectedConv2d(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, bias=True, dim=3):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, bias=True, eps=1e-3, is_coft=True, block_share=False):
         super().__init__()
 
         self.in_channels=in_channels
@@ -321,6 +321,9 @@ class OFTInjectedConv2d(nn.Module):
         self.stride=stride
         self.padding=padding
         self.bias=bias
+
+        self.block_share=block_share
+        self.is_coft=is_coft
  
         # Define the fixed Conv2d layer: v
         self.OFT = nn.Conv2d(self.in_channels, self.out_channels, self.kernel_size, stride=self.stride, padding=self.padding, bias=self.bias)
@@ -328,10 +331,8 @@ class OFTInjectedConv2d(nn.Module):
         self.filt_shape = [self.out_channels, self.in_channels, self.kernel_size, self.kernel_size]
         self.fix_filt_shape = [self.kernel_size * self.kernel_size * self.in_channels, self.out_channels]
 
-        eps = 1e-3
         # Define the trainable matrix parameter: R
-        self.dim = dim
-        if self.dim == 2:
+        if self.block_share:
             # Initialized as an identity matrix
             self.R_shape = [self.kernel_size * self.kernel_size, self.kernel_size * self.kernel_size]
             self.R = nn.Parameter(torch.zeros(self.R_shape[0], self.R_shape[0]), requires_grad=True)
@@ -347,7 +348,7 @@ class OFTInjectedConv2d(nn.Module):
             self.eps = eps * self.R_shape[1] * self.R_shape[1]
 
     def forward(self, x):
-        if self.dim == 2:
+        if self.block_share:
             with torch.no_grad():
                 self.R.copy_(project(self.R, eps=self.eps))
             orth_rotate = self.cayley(self.R)
@@ -394,7 +395,7 @@ class OFTInjectedConv2d(nn.Module):
         return Q
 
     def block_diagonal(self, R):
-        if self.dim == 2:
+        if self.block_share:
             # Create a list of R repeated block_count times
             blocks = [R] * self.in_channels
         else:
@@ -515,10 +516,11 @@ _find_modules = _find_modules_v2
 def inject_trainable_oft(
     model: nn.Module,
     target_replace_module: Set[str] = DEFAULT_TARGET_REPLACE,
-    loras=None,  # path to lora .pt
     verbose: bool = False,
-    dropout_p: float = 0.0,
-    scale: float = 1.0,
+    r: int = 4,
+    eps: float = 1e-5,
+    coft: bool = True,
+    block_share: bool = False,
 ):
     """
     inject oft into model, and returns oft parameter groups.
@@ -540,8 +542,10 @@ def inject_trainable_oft(
             _child_module.in_features,
             _child_module.out_features,
             _child_module.bias is not None,
-            dropout_p=dropout_p,
-            scale=scale,
+            r=r,
+            eps=eps,
+            is_coft=coft,
+            block_share=block_share,
         )
         _tmp.OFT.weight = weight
         if bias is not None:
@@ -562,10 +566,11 @@ def inject_trainable_oft(
 def inject_trainable_oft_with_norm(
     model: nn.Module,
     target_replace_module: Set[str] = DEFAULT_TARGET_REPLACE,
-    loras=None,  # path to lora .pt
     verbose: bool = False,
-    dropout_p: float = 0.0,
-    scale: float = 1.0,
+    r: int = 4,
+    eps: float = 1e-5,
+    coft: bool = True,
+    block_share: bool = False,
 ):
     """
     inject lora into model, and returns lora parameter groups.
@@ -586,9 +591,7 @@ def inject_trainable_oft_with_norm(
         _tmp = OFTInjectedLinear_with_norm(
             _child_module.in_features,
             _child_module.out_features,
-            _child_module.bias is not None,
-            dropout_p=dropout_p,
-            scale=scale,
+            _child_module.bias is not None
         )
         _tmp.OFT.weight = weight
         if bias is not None:
@@ -609,7 +612,12 @@ def inject_trainable_oft_with_norm(
 
 def inject_trainable_oft_extended(
     model: nn.Module,
-    target_replace_module: Set[str] = UNET_EXTENDED_TARGET_REPLACE
+    target_replace_module: Set[str] = UNET_EXTENDED_TARGET_REPLACE,
+    verbose: bool = False,
+    r: int = 4,
+    eps: float = 1e-5,
+    coft: bool = True,
+    block_share: bool = False,
 ):
     """
     inject lora into model, and returns lora parameter groups.
@@ -667,7 +675,11 @@ def inject_trainable_oft_extended(
 
 def inject_trainable_oft_conv(
     model: nn.Module,
-    target_replace_module: Set[str] = UNET_CONV_TARGET_REPLACE
+    target_replace_module: Set[str] = UNET_CONV_TARGET_REPLACE,
+    verbose: bool = False,
+    r: int = 4,
+    eps: float = 1e-5,
+    coft: bool = True
 ):
     """
     inject lora into model, and returns lora parameter groups.

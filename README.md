@@ -15,7 +15,7 @@ Stay tuned, more information and code coming soon.
 We expect the first version of our code will be released on 23rd June. Thanks!
 
 
-<!--
+
 ## Getting Started
 
 ### Downloading Data
@@ -70,32 +70,40 @@ conda env create -f environment.yml
 pip install –upgrade diffusers[torch]
 ```
 
+4. Optional, install [xformers](https://github.com/facebookresearch/xformers) 
+```bash
+pip install -U xformers
+```
 
 ## Usage
 
-There are only two hyperparameters that one need to adjusted, we noticed that generally with more number of blocks the fine-tuning results become worse:
+There are only two hyperparameters that one need to adjusted, we noticed that generally with more number of blocks the fine-tuning results become worse. Block sharing is default false, but might work if the control is very simple.
 - Number of blocks r
 - eps-deviation (only with the constrained variant COFT)
+- Block-sharing block_share
 
 |                   | r = 2   | r = 4   | r = 8   | r = 16  |
 |-------------------|---------|---------|---------|---------|
 | Trainable Params  | 29.5 M  | 16.3 M  | 9.7 M   | 6.4 M   |
-| mIoU ↑                 | 27.18   | 27.06   | 24.09   | 21.0    |
-| mAcc ↑                 | 39.39   | 40.09   | 36.95   | 32.55   |
-| aAcc ↑                 | 65.24   | 62.96   | 60.25   | 55.5    |
+| mIoU ↑            | 27.18   | 27.06   | 24.09   | 21.0    |
+| mAcc ↑            | 39.39   | 40.09   | 36.95   | 32.55   |
+| aAcc ↑            | 65.24   | 62.96   | 60.25   | 55.5    |
 
 
 ### Controllable Generation
 
 1. Create the model with additional oft parameters:
 ```bash
-python oft-control/tool_add_control_oft.py ./models/v1-5-pruned.ckpt ./models/control_sd15_ini_oft.ckpt
+python oft-control/tool_add_control_oft.py \
+  --input_path=./models/v1-5-pruned.ckpt \
+  --output_path=./models/control_sd15_ini_oft.ckpt \
+  --eps=1e-5 \
+  --r=4 \
+  --coft
 ```
 2. Specify the control signal and dataset. Train the model:
 ```bash
-python oft-control/train.py \
-  --eps=$eps \
-  --rank=$rank
+python oft-control/train.py 
 ```
 #### 
 
@@ -139,7 +147,6 @@ accelerate launch train_dreambooth_oft.py \
   --coft
 ```
 
--->
 
 ## Contributing
 

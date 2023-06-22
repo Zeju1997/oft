@@ -1,5 +1,5 @@
 model:
-  target: oldm.opt_lora_ldm.ControlLDM
+  target: oldm.oft_ldm.ControlLDM
   params:
     linear_start: 0.00085
     linear_end: 0.0120
@@ -19,7 +19,7 @@ model:
     only_mid_control: False
 
     control_stage_config:
-      target: oldm.opt_lora_ldm.ControlNet
+      target: oldm.oft_ldm.ControlNet
       params:
         image_size: 32 # unused
         in_channels: 4
@@ -37,7 +37,7 @@ model:
         legacy: False
 
     unet_config:
-      target: oldm.opt_lora_ldm.ControlledUnetModel
+      target: oldm.oft_ldm.ControlledUnetModel
       params:
         image_size: 32 # unused
         in_channels: 4

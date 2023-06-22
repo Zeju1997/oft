@@ -10,19 +10,33 @@ import sys
 import os
 os.environ['HF_HOME'] = '/tmp'
 
-assert len(sys.argv) == 3, 'Args are wrong.'
+# assert len(sys.argv) == 3, 'Args are wrong.'
 
-input_path = sys.argv[1]
-output_path = sys.argv[2]
-
-assert os.path.exists(input_path), 'Input model does not exist.'
-assert not os.path.exists(output_path), 'Output filename already exists.'
-assert os.path.exists(os.path.dirname(output_path)), 'Output path is not valid.'
+# input_path = sys.argv[1]
+# output_path = sys.argv[2]
 
 import torch
 from share import *
 from oldm.model import create_model
 from oft import inject_trainable_oft, inject_trainable_oft_conv, inject_trainable_oft_extended
+
+import argparse
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--input_path', type=str, default='./models/v1-5-pruned.ckpt')
+parser.add_argument('--output_path', type=str, default='./models/control_sd15_ini_oft.ckpt')
+parser.add_argument('--r', type=int, default=4)
+parser.add_argument('--eps', type=float, default=1e-5)
+parser.add_argument('--coft', action="store_true")
+parser.add_argument('--block_share', action="store_true", default=False)
+
+args = parser.parse_args()
+
+assert os.path.exists(args.input_path), 'Input model does not exist.'
+# assert not os.path.exists(output_path), 'Output filename already exists.'
+assert os.path.exists(os.path.dirname(args.output_path)), 'Output path is not valid.'
+
 
 def get_node_name(name, parent_name):
     if len(name) <= len(parent_name):
@@ -35,11 +49,12 @@ def get_node_name(name, parent_name):
 
 model = create_model(config_path='./configs/oft_ldm_v15.yaml')
 model.model.requires_grad_(False)
-unet_lora_params, train_names = inject_trainable_oft(model.model)
-# unet_lora_params, train_names = inject_trainable_oft_extended(model.model)
-# unet_lora_params, train_names = inject_trainable_oft_conv(model.model)
 
-pretrained_weights = torch.load(input_path)
+unet_lora_params, train_names = inject_trainable_oft(model.model, r=args.r, eps=args.eps, coft=args.coft, block_share=args.block_share)
+# unet_lora_params, train_names = inject_trainable_oft_extended(model.model, r=args.r, eps=args.eps, coft=args.coft, block_share=args.block_share)
+# unet_lora_params, train_names = inject_trainable_oft_conv(model.model, r=args.r, eps=args.eps, coft=args.coft, block_share=args.block_share)
+
+pretrained_weights = torch.load(args.input_path)
 if 'state_dict' in pretrained_weights:
     pretrained_weights = pretrained_weights['state_dict']
 
@@ -65,5 +80,5 @@ with open('model_names.txt', 'w') as file:
         file.write(element + '\n')
 
 model.load_state_dict(target_dict, strict=True)
-torch.save(model.state_dict(), output_path)
+torch.save(model.state_dict(), args.output_path)
 print('Done.')

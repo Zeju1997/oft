@@ -2,7 +2,8 @@
 *.log
 
 # Ignore folder
-log/
+lightning_logs/
+oft-control/log/
 oft-db/data/
 oft-db/log_cot/
 
@@ -17,5 +18,7 @@ build/
 *.pth
 *.mat
 *.pkl
+
+README.md
 
 __pycache__
