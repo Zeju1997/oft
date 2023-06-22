@@ -8,8 +8,8 @@ Stay tuned, more information and code coming soon.
 
 ## To-Do
 
-- [x] Code for running controllable generation (ControlNet similar tasks)
-- [x] Code for running subject-driven generation (Dreambooth similar tasks)
+- [] Code for running controllable generation (ControlNet similar tasks)
+- [] Code for running subject-driven generation (Dreambooth similar tasks)
 
 <!--
 ## Getting Started

@@ -2,14 +2,9 @@
 *.log
 
 # Ignore folder
-lightning_logs/
-mmpose/
-experiments/
-lora/
-ControlLoRA/
-data/celebhq-text/
-log2/
-SegFormer/
+log/
+oft-db/data/
+oft-db/log_cot/
 
 # Ignore the 'build' folder
 build/

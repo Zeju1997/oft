@@ -1,0 +1,6 @@
+# data
+/data
+
+# log files
+/log
+/wandb
