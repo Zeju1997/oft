@@ -46,11 +46,11 @@ from diffusers import (
     UNet2DConditionModel,
 )
 from diffusers.loaders import AttnProcsLayers
-from oft_utils.attention_processor import COTAttnProcessor
+from oft_utils.attention_processor import OFTAttnProcessor
 from diffusers.optimization import get_scheduler
 from diffusers.utils import check_min_version, is_wandb_available
 from diffusers.utils.import_utils import is_xformers_available
-from oft_utils.mhe import MHE_COT as MHE
+from oft_utils.mhe import MHE_OFT as MHE
 
 
 # Will error if the minimal version of diffusers is not installed. Remove at your own risks.
@@ -75,14 +75,14 @@ tags:
 - stable-diffusion-diffusers
 - text-to-image
 - diffusers
-- cot
+- oft
 inference: true
 ---
     """
     model_card = f"""
-# COT DreamBooth - {repo_id}
+# OFT DreamBooth - {repo_id}
 
-These are COT adaption weights for {base_model}. The weights were trained on {prompt} using [DreamBooth](https://dreambooth.github.io/). You can find some example images in the following. \n
+These are OFT adaption weights for {base_model}. The weights were trained on {prompt} using [DreamBooth](https://dreambooth.github.io/). You can find some example images in the following. \n
 {img_str}
 """
     with open(os.path.join(repo_folder, "README.md"), "w") as f:
@@ -396,7 +396,7 @@ def parse_args(input_args=None):
         "--eps",
         type=float,
         help=(
-            "The control strength of COT. The freedom of rotation."
+            "The control strength of COFT. The freedom of rotation. Only has an effect if args.coft is set to True."
         ),
     )
     parser.add_argument(
@@ -404,6 +404,13 @@ def parse_args(input_args=None):
         type=int,
         help=(
             "The factor to divide the orthogonal matrix to smaller blocks."
+        ),
+    )
+    parser.add_argument(
+        "--coft",
+        action='store_true',
+        help=(
+            "The constrainted variant of OFT."
         ),
     )
     if input_args is not None:
@@ -724,8 +731,8 @@ def main(args):
     # - up blocks (2x attention layers) * (3x transformer layers) * (3x down blocks) = 18
     # => 32 layers
 
-    # Set correct cot layers
-    cot_attn_procs = {}
+    # Set correct oft layers
+    oft_attn_procs = {}
     for name in unet.attn_processors.keys():
         cross_attention_dim = None if name.endswith("attn1.processor") else unet.config.cross_attention_dim
         if name.startswith("mid_block"):
@@ -737,12 +744,12 @@ def main(args):
             block_id = int(name[len("down_blocks.")])
             hidden_size = unet.config.block_out_channels[block_id]
 
-        cot_attn_procs[name] = COTAttnProcessor(hidden_size=hidden_size, cross_attention_dim=cross_attention_dim, eps=args.eps, rank=args.rank)
+        oft_attn_procs[name] = OFTAttnProcessor(hidden_size=hidden_size, cross_attention_dim=cross_attention_dim, eps=args.eps, rank=args.rank, is_coft=args.coft)
 
-    unet.set_attn_processor(cot_attn_procs)
-    cot_layers = AttnProcsLayers(unet.attn_processors)
+    unet.set_attn_processor(oft_attn_procs)
+    oft_layers = AttnProcsLayers(unet.attn_processors)
 
-    accelerator.register_for_checkpointing(cot_layers)
+    accelerator.register_for_checkpointing(oft_layers)
 
     # Enable TF32 for faster training on Ampere GPUs,
     # cf https://pytorch.org/docs/stable/notes/cuda.html#tensorfloat-32-tf32-on-ampere-devices
@@ -769,7 +776,7 @@ def main(args):
 
     # Optimizer creation
     optimizer = optimizer_class(
-        cot_layers.parameters(),
+        oft_layers.parameters(),
         lr=args.learning_rate,
         betas=(args.adam_beta1, args.adam_beta2),
         weight_decay=args.adam_weight_decay,
@@ -813,8 +820,8 @@ def main(args):
     )
 
     # Prepare everything with our `accelerator`.
-    cot_layers, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
-        cot_layers, optimizer, train_dataloader, lr_scheduler
+    oft_layers, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
+        oft_layers, optimizer, train_dataloader, lr_scheduler
     )
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
@@ -827,7 +834,7 @@ def main(args):
     # We need to initialize the trackers we use, and also store our configuration.
     # The trackers initializes automatically on the main process.
     if accelerator.is_main_process:
-        accelerator.init_trackers("dreambooth-cot", config=vars(args), init_kwargs=wandb_init)
+        accelerator.init_trackers("dreambooth-oft", config=vars(args), init_kwargs=wandb_init)
 
     # Train!
     total_batch_size = args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps
@@ -878,7 +885,7 @@ def main(args):
     accelerator.log({"mhe_loss": mhe_loss}, step=0)
     accelerator.log({"eps": args.eps}, step=0)
     accelerator.log({"rank": args.rank}, step=0)
-    accelerator.log({"OFT": 0}, step=0)
+    accelerator.log({"COFT": 1 if args.coft else 0}, step=0)
 
     for epoch in range(first_epoch, args.num_train_epochs):
         unet.train()
@@ -937,7 +944,7 @@ def main(args):
 
                 accelerator.backward(loss)
                 if accelerator.sync_gradients:
-                    params_to_clip = cot_layers.parameters()
+                    params_to_clip = oft_layers.parameters()
                     accelerator.clip_grad_norm_(params_to_clip, args.max_grad_norm)
                 optimizer.step()
                 lr_scheduler.step()
@@ -1019,7 +1026,7 @@ def main(args):
                 torch.cuda.empty_cache()
 
 
-    # Save the cot layers
+    # Save the oft layers
     accelerator.wait_for_everyone()
     if accelerator.is_main_process:
         unet = unet.to(torch.float32)

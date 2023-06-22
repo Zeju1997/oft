@@ -397,7 +397,6 @@ def project(R, eps):
     if norm_diff <= eps:
         return R
     else:
-        print('projecting !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
         return I + eps * (diff / norm_diff)
 
 def project_batch(R, eps=1e-5):
@@ -407,18 +406,19 @@ def project_batch(R, eps=1e-5):
     diff = R - I
     norm_diff = torch.norm(R - I, dim=(1, 2), keepdim=True)
     mask = (norm_diff <= eps).bool()
-    print('diff', diff)
-    if not mask.any():
-        print("projecting batch!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     out = torch.where(mask, R, I + eps * (diff / norm_diff))
     return out
 
+
 class OFTLinearLayer(nn.Module):
-    def __init__(self, in_features, out_features, bias=False, dim=3, eps=5e-6, rank=4):
+    def __init__(self, in_features, out_features, bias=False, dim=3, eps=5e-6, rank=4, is_coft=False):
         super(OFTLinearLayer, self).__init__()
 
         # Define the reduction rate:
         self.r = rank
+        
+        # Check whether to use the constrained variant COFT 
+        self.is_coft = is_coft
 
         assert in_features % self.r == 0, "in_features must be divisible by r"
 
@@ -460,27 +460,19 @@ class OFTLinearLayer(nn.Module):
         dtype = self.R.dtype
 
         if self.dim == 2:
-            with torch.no_grad():
-                self.R.copy_(project(self.R, eps=self.eps))
+            if self.is_coft:
+                with torch.no_grad():
+                    self.R.copy_(project(self.R, eps=self.eps))
             orth_rotate = self.cayley(self.R)
-            # orth_rotate = self.R # self.cayley(self.R)
         else:
-            with torch.no_grad():
-                self.R.copy_(project_batch(self.R, eps=self.eps))
+            if self.is_coft:
+                with torch.no_grad():
+                    self.R.copy_(project_batch(self.R, eps=self.eps))
             orth_rotate = self.cayley_batch(self.R)
-            # orth_rotate = self.R # self.cayley_batch(self.R)
-
-        # Gram Schmidt parametrization
-        # orth_rotate = self.cayley(self.R)
-        # orth_rotate = self.R
-        # print('is orthogonal', self.is_orthogonal(orth_rotate))
-        # projected_R = project(self.R, eps=self.eps)
-        # orth_rotate = self.cayley(projected_R)
 
         # Block-diagonal parametrization
         block_diagonal_matrix = self.block_diagonal(orth_rotate)
-        # print('block_diagonal_matrix is identity', self.is_identity_matrix(block_diagonal_matrix))
-        # print('block_diagonal_matrix is diagonal', self.is_orthogonal(block_diagonal_matrix))
+
         # fix filter
         fix_filt = attn.weight.data
         fix_filt = torch.transpose(fix_filt, 0, 1)
@@ -495,7 +487,7 @@ class OFTLinearLayer(nn.Module):
         out = nn.functional.linear(input=x.to(orig_dtype), weight=filt.to(orig_dtype), bias=bias_term)
         # out = nn.functional.linear(input=x, weight=fix_filt.transpose(0, 1), bias=bias_term)
 
-        return out #.to(orig_dtype)
+        return out
 
     def cayley(self, data):
         r, c = list(data.shape)
@@ -526,8 +518,6 @@ class OFTLinearLayer(nn.Module):
         else:
             # Create a list of R slices along the third dimension
             blocks = [R[i, ...] for i in range(self.r)]
-            # for block in blocks:
-            #     print('is diagonal 3', self.is_orthogonal(block))
 
         # Use torch.block_diag to create the block diagonal matrix
         A = torch.block_diag(*blocks)
@@ -548,18 +538,20 @@ class OFTLinearLayer(nn.Module):
         identity = torch.eye(tensor.shape[0], device=tensor.device)
         return torch.all(torch.eq(tensor, identity))
 
+
 class OFTAttnProcessor(nn.Module):
-    def __init__(self, hidden_size, cross_attention_dim=None, eps=2e-5, rank=4):
+    def __init__(self, hidden_size, cross_attention_dim=None, eps=2e-5, rank=4, is_coft=False):
         super().__init__()
 
         self.hidden_size = hidden_size
         self.cross_attention_dim = cross_attention_dim
         self.rank = rank
-
-        self.to_q_oft = OFTLinearLayer(hidden_size, hidden_size, eps=eps, rank=rank)
-        self.to_k_oft = OFTLinearLayer(cross_attention_dim or hidden_size, hidden_size, eps=eps, rank=rank)
-        self.to_v_oft = OFTLinearLayer(cross_attention_dim or hidden_size, hidden_size, eps=eps, rank=rank)
-        self.to_out_oft = OFTLinearLayer(hidden_size, hidden_size, eps=eps, rank=rank)
+        self.is_coft = is_coft
+        
+        self.to_q_oft = OFTLinearLayer(hidden_size, hidden_size, eps=eps, rank=rank, is_coft=is_coft)
+        self.to_k_oft = OFTLinearLayer(cross_attention_dim or hidden_size, hidden_size, eps=eps, rank=rank, is_coft=is_coft)
+        self.to_v_oft = OFTLinearLayer(cross_attention_dim or hidden_size, hidden_size, eps=eps, rank=rank, is_coft=is_coft)
+        self.to_out_oft = OFTLinearLayer(hidden_size, hidden_size, eps=eps, rank=rank, is_coft=is_coft)
 
     def __call__(self, attn: Attention, hidden_states, encoder_hidden_states=None, attention_mask=None, scale=1.0):
         batch_size, sequence_length, _ = (
@@ -791,53 +783,6 @@ class AttnProcessor2_0:
         return hidden_states
 
 
-class LoRAXFormersAttnProcessor(nn.Module):
-    def __init__(self, hidden_size, cross_attention_dim, rank=4, attention_op: Optional[Callable] = None):
-        super().__init__()
-
-        self.hidden_size = hidden_size
-        self.cross_attention_dim = cross_attention_dim
-        self.rank = rank
-        self.attention_op = attention_op
-
-        self.to_q_lora = LoRALinearLayer(hidden_size, hidden_size, rank)
-        self.to_k_lora = LoRALinearLayer(cross_attention_dim or hidden_size, hidden_size, rank)
-        self.to_v_lora = LoRALinearLayer(cross_attention_dim or hidden_size, hidden_size, rank)
-        self.to_out_lora = LoRALinearLayer(hidden_size, hidden_size, rank)
-
-    def __call__(self, attn: Attention, hidden_states, encoder_hidden_states=None, attention_mask=None, scale=1.0):
-        batch_size, sequence_length, _ = (
-            hidden_states.shape if encoder_hidden_states is None else encoder_hidden_states.shape
-        )
-        attention_mask = attn.prepare_attention_mask(attention_mask, sequence_length, batch_size)
-
-        query = attn.to_q(hidden_states) + scale * self.to_q_lora(hidden_states)
-        query = attn.head_to_batch_dim(query).contiguous()
-
-        if encoder_hidden_states is None:
-            encoder_hidden_states = hidden_states
-        elif attn.norm_cross:
-            encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
-
-        key = attn.to_k(encoder_hidden_states) + scale * self.to_k_lora(encoder_hidden_states)
-        value = attn.to_v(encoder_hidden_states) + scale * self.to_v_lora(encoder_hidden_states)
-
-        key = attn.head_to_batch_dim(key).contiguous()
-        value = attn.head_to_batch_dim(value).contiguous()
-
-        hidden_states = xformers.ops.memory_efficient_attention(
-            query, key, value, attn_bias=attention_mask, op=self.attention_op, scale=attn.scale
-        )
-        hidden_states = attn.batch_to_head_dim(hidden_states)
-
-        # linear proj
-        hidden_states = attn.to_out[0](hidden_states) + scale * self.to_out_lora(hidden_states)
-        # dropout
-        hidden_states = attn.to_out[1](hidden_states)
-
-        return hidden_states
-
-
 class SlicedAttnProcessor:
     def __init__(self, slice_size):
         self.slice_size = slice_size
@@ -971,6 +916,5 @@ AttentionProcessor = Union[
     AttnAddedKVProcessor,
     SlicedAttnAddedKVProcessor,
     AttnAddedKVProcessor2_0,
-    LoRAAttnProcessor,
-    LoRAXFormersAttnProcessor,
+    OFTAttnProcessor,
 ]

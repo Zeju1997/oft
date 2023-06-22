@@ -4,7 +4,7 @@ export MODEL_NAME="runwayml/stable-diffusion-v1-5"
 idx=$1
 prompt_idx=$((idx % 25))
 class_idx=$((idx / 25))
-eps=5e-5
+eps=6e-5
 rank=4
 
 # Define the unique_token, class_tokens, and subject_names
@@ -160,11 +160,11 @@ name="man-0"
 selected_subject="man"
 
 export OUTPUT_DIR="log_cot/${name}"
-export INSTANCE_DIR="data/${selected_subject}"
+export INSTANCE_DIR="../data/dreambooth/${selected_subject}"
 export CLASS_DIR="data/class_data/${class_token}"
 
 . /home/zqiu/miniconda3/etc/profile.d/conda.sh
-conda activate nerf
+conda activate oft
 
 accelerate launch train_dreambooth_oft.py \
   --pretrained_model_name_or_path=$MODEL_NAME  \
@@ -178,18 +178,19 @@ accelerate launch train_dreambooth_oft.py \
   --train_batch_size=1 \
   --gradient_accumulation_steps=1 \
   --checkpointing_steps=5000 \
-  --learning_rate=5e-5 \
+  --learning_rate=6e-5 \
   --report_to="wandb" \
   --lr_scheduler="constant" \
   --lr_warmup_steps=0 \
-  --max_train_steps=3005 \
+  --max_train_steps=2005 \
   --validation_prompt="$validation_prompt" \
   --validation_epochs=1 \
   --seed="0" \
   --name="$name" \
   --num_class_images=200 \
   --eps=$eps \
-  --rank=$rank
+  --rank=$rank \
+# --coft
 #   --test_prompt="$test_prompt" \
 #   --eps=6e-5 \
 #  --learning_rate=6e-5 \

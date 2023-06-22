@@ -65,7 +65,25 @@ git clone https://github.com/Zeju1997/oft.git
 conda env create -f environment.yml
 ```
 
-## Usage 
+3. Install [diffusers](https://github.com/huggingface/diffusers)
+```bash
+pip install –upgrade diffusers[torch]
+```
+
+
+## Usage
+
+There are only two hyperparameters that one need to adjusted, we noticed that generally with more number of blocks the fine-tuning results become worse:
+- Number of blocks r
+- eps-deviation (only with the constrained variant COFT)
+
+|                   | r = 2   | r = 4   | r = 8   | r = 16  |
+|-------------------|---------|---------|---------|---------|
+| Trainable Params  | 29.5 M  | 16.3 M  | 9.7 M   | 6.4 M   |
+| mIoU ↑                 | 27.18   | 27.06   | 24.09   | 21.0    |
+| mAcc ↑                 | 39.39   | 40.09   | 36.95   | 32.55   |
+| aAcc ↑                 | 65.24   | 62.96   | 60.25   | 55.5    |
+
 
 ### Controllable Generation
 
@@ -73,13 +91,53 @@ conda env create -f environment.yml
 ```bash
 python oft-control/tool_add_control_oft.py ./models/v1-5-pruned.ckpt ./models/control_sd15_ini_oft.ckpt
 ```
-2. Train the model (need to specify the control and dataset):
+2. Specify the control signal and dataset. Train the model:
 ```bash
-python oft-control/train.py
+python oft-control/train.py \
+  --eps=$eps \
+  --rank=$rank
 ```
 #### 
 
 ### Subject-driven Generation
+1. Create the model with additional oft parameters:
+```bash
+python oft-control/tool_add_control_oft.py ./models/v1-5-pruned.ckpt ./models/control_sd15_ini_oft.ckpt
+```
+2. Within the 'oft-db' folder, run the training script:
+```bash
+./train_dreambooth_oft.sh
+```
+Similar to the example for dreamfusion, you can run the finetuning using oft with the following command. The three paramters that need to be adjusted are
+
+
+```bash
+accelerate launch train_dreambooth_oft.py \
+  --pretrained_model_name_or_path=$MODEL_NAME  \
+  --instance_data_dir=$INSTANCE_DIR \
+  --class_data_dir="$CLASS_DIR" \
+  --output_dir="$OUTPUT_DIR" \
+  --instance_prompt="$instance_prompt" \
+  --with_prior_preservation --prior_loss_weight=1.0 \
+  --class_prompt="$class_prompt" \
+  --resolution=512 \
+  --train_batch_size=1 \
+  --gradient_accumulation_steps=1 \
+  --checkpointing_steps=5000 \
+  --learning_rate=5e-5 \
+  --report_to="wandb" \
+  --lr_scheduler="constant" \
+  --lr_warmup_steps=0 \
+  --max_train_steps=3005 \
+  --validation_prompt="$validation_prompt" \
+  --validation_epochs=1 \
+  --seed="0" \
+  --name="$name" \
+  --num_class_images=200 \
+  --eps=$eps \
+  --rank=$rank \
+  --coft
+```
 
 -->
 

@@ -5,89 +5,6 @@ import torch.nn.functional as F
 import math
 
 
-'''
-class MHE_Sphereface_Plus(nn.Module):
-    """ reference: <Learning towards Minimum Hyperspherical Energy>"
-    """
-    def __init__(self, feat_dim, num_class, s=30., m=1.5, lambda_MHE=1., w_t=None):
-        super(MHE, self).__init__()
-        self.feat_dim = feat_dim
-        self.num_class = num_class
-        self.s = s
-        self.m = m
-        self.lambda_MHE = lambda_MHE
-        self.w = nn.Parameter(torch.Tensor(feat_dim, num_class))
-        if w_t is not None:
-            self.w.data = w_t.t()
-        else:
-            nn.init.xavier_normal_(self.w)
-
-    def forward(self, y):
-        # weight normalization
-        with torch.no_grad():
-            self.w.data = F.normalize(self.w.data, dim=0)
-
-        # mini-batch MHE loss for classifiers
-        sel_w = self.w[:, torch.unique(y)]
-        gram_mat = torch.acos(torch.matmul(torch.transpose(sel_w, 0, 1), sel_w).clamp(-1.+1e-5, 1.-1e-5))
-        shape_gram = gram_mat.size()
-        MHE_loss = torch.sum(torch.triu(torch.pow(gram_mat, -2), diagonal=1))
-        MHE_loss = MHE_loss / (shape_gram[0] * (shape_gram[0] - 1) * 0.5)
-
-        # logits = x @ self.w
-        # loss = F.cross_entropy(logits, y) + self.lambda_MHE * MHE_loss
-
-        return MHE_loss
-
-
-class MHE(nn.Module):
-    """ reference: <Learning towards Minimum Hyperspherical Energy>"
-    """
-    def __init__(self, feat_dim, num_class, s=30., m=1.5, lambda_MHE=1., w_t=None):
-        super(MHE, self).__init__()
-        self.feat_dim = feat_dim
-        self.num_class = num_class
-        self.s = s
-        self.m = m
-        self.lambda_MHE = lambda_MHE
-        self.w = nn.Parameter(torch.Tensor(feat_dim, num_class), requires_grad=True)
-        if w_t is not None:
-            self.w.data = w_t.t()
-        else:
-            nn.init.xavier_normal_(self.w)
-
-    def forward(self, x, y):
-        filt = self.w
-        filt_norm = torch.sqrt(torch.sum(filt*filt, dim=0, keepdim=True) + 1e-4)
-        norm_mat = torch.matmul(torch.transpose(filt_norm, 0, 1), filt_norm)
-        inner_pro = torch.matmul(torch.transpose(filt, 0, 1), filt)
-        inner_pro /= norm_mat
-
-        n_filt = self.num_class
-        cross_terms = 2.0 - 2.0 * inner_pro
-        final = -torch.log(cross_terms + torch.eye(n_filt).cuda())
-        # final -= torch.matrix_band_part(final, -1, 0)
-        final = final.triu()
-        cnt = n_filt * (n_filt - 1) / 2.0
-        MHE_loss = 10 * torch.sum(final) / cnt
-
-
-        # weight normalization
-        with torch.no_grad():
-            self.w.data = F.normalize(self.w.data, dim=0)
-        # mini-batch MHE loss for classifiers
-        sel_w = self.w[:, torch.unique(y)]
-        gram_mat = torch.acos(torch.matmul(torch.transpose(sel_w, 0, 1), sel_w).clamp(-1.+1e-5, 1.-1e-5))
-        shape_gram = gram_mat.size()
-        MHE_loss = torch.sum(torch.triu(torch.pow(gram_mat, -2), diagonal=1))
-        MHE_loss = MHE_loss / (shape_gram[0] * (shape_gram[0] - 1) * 0.5)
-
-
-        logits = x @ self.w
-        loss = F.cross_entropy(logits, y) + self.lambda_MHE * MHE_loss
-
-        return loss, MHE_loss
-'''
 import copy
 import numpy as np
 
@@ -211,9 +128,9 @@ def project_batch(R, eps=1e-5):
     return out
 
 
-class MHE_COT(nn.Module):
+class MHE_OFT(nn.Module):
     def __init__(self, model, eps=2e-5, rank=4):
-        super(MHE_COT, self).__init__()
+        super(MHE_OFT, self).__init__()
         # self.model = copy.deepcopy(model)
         # self.model = self.copy_without_grad(model)
 
@@ -231,17 +148,17 @@ class MHE_COT(nn.Module):
             if 'attn' in name and 'processor' not in name:
                 if 'weight' in name:
                     if 'to_q' in name:
-                        cot_R = name.replace('to_q.weight', 'processor.to_q_cot.R')
+                        oft_R = name.replace('to_q.weight', 'processor.to_q_oft.R')
                     elif 'to_k' in name:
-                        cot_R = name.replace('to_k.weight', 'processor.to_k_cot.R')
+                        oft_R = name.replace('to_k.weight', 'processor.to_k_oft.R')
                     elif 'to_v' in name:
-                        cot_R = name.replace('to_v.weight', 'processor.to_v_cot.R')
+                        oft_R = name.replace('to_v.weight', 'processor.to_v_oft.R')
                     elif 'to_out' in name:
-                        cot_R = name.replace('to_out.0.weight', 'processor.to_out_cot.R')
+                        oft_R = name.replace('to_out.0.weight', 'processor.to_out_oft.R')
                     else:
                         pass
                     
-                    R = self.extracted_params[cot_R].cuda()
+                    R = self.extracted_params[oft_R].cuda()
 
                     with torch.no_grad():
                         if len(R.shape) == 2:
@@ -252,11 +169,9 @@ class MHE_COT(nn.Module):
                             self.eps = eps * R.shape[1] * R.shape[0]
                             R.copy_(project_batch(R, eps=self.eps))
                             orth_rotate = self.cayley_batch(R)
-                        # block_diagonal_matrix = self.block_diagonal(orth_rotate)
-                        # print('block_diagonal_matrix is identity', self.is_identity_matrix(block_diagonal_matrix))
-                        # print(self.extracted_params[name].shape, self.extracted_params[cot_R].shape)
+
                         self.extracted_params[name] = self.extracted_params[name] @ self.block_diagonal(orth_rotate)
-                    keys_to_delete.append(cot_R)
+                    keys_to_delete.append(oft_R)
                 
         for key in keys_to_delete:
             del self.extracted_params[key]
@@ -271,13 +186,9 @@ class MHE_COT(nn.Module):
         if len(R.shape) == 2:
             # Create a list of R repeated block_count times
             blocks = [R] * self.r
-            #for block in blocks:
-            #    print('is diagonal 2', self.is_orthogonal(block))
         else:
             # Create a list of R slices along the third dimension
             blocks = [R[i, ...] for i in range(R.shape[0])]
-            # for block in blocks:
-            #     print('is diagonal 3', self.is_orthogonal(block))
 
         # Use torch.block_diag to create the block diagonal matrix
         A = torch.block_diag(*blocks)
@@ -379,79 +290,7 @@ class MHE_COT(nn.Module):
         identity = torch.eye(tensor.shape[0], device=tensor.device)
         return torch.all(torch.eq(tensor, identity))
 
-'''
-class MHE_db(nn.Module):
-    def __init__(self, model):
-        super(MHE_db, self).__init__()
-        self.model = copy.deepcopy(model)
-        # self.model.load_state_dict(model.state_dict())
-        # self.model = self.copy_without_grad(model)
 
-        self.extracted_params = {}
-        for name, param in self.model.named_parameters():
-            self.extracted_params[name] = param
-
-    def copy_without_grad(self, model):
-        copied_model = copy.deepcopy(model)
-        for param in copied_model.parameters():
-            param.requires_grad = False
-            param.detach_()
-        return copied_model
-
-    def mhe_loss(self, filt):
-        if len(filt.shape) == 2:
-            n_filt, _ = filt.shape
-            filt = torch.transpose(filt, 0, 1)
-            filt_neg = filt * (-1)
-            filt = torch.cat((filt, filt_neg), dim=1)
-            n_filt *= 2
-
-            filt_norm = torch.sqrt(torch.sum(filt * filt, dim=0, keepdim=True) + 1e-4)
-            norm_mat = torch.matmul(filt_norm.t(), filt_norm)
-            inner_pro = torch.matmul(filt.t(), filt)
-            inner_pro /= norm_mat
-
-            cross_terms = (2.0 - 2.0 * inner_pro + torch.diag(torch.tensor([1.0] * n_filt)).cuda())
-            final = torch.pow(cross_terms, torch.ones_like(cross_terms) * (-0.5))
-            final -= torch.tril(final)
-            cnt = n_filt * (n_filt - 1) / 2.0
-            MHE_loss = 1 * torch.sum(final) / cnt
-        
-        else:
-            n_filt, _, _, _ = filt.shape
-            filt = filt.view(n_filt, -1)
-            filt = torch.transpose(filt, 0, 1)
-            filt_neg = filt * -1
-            filt = torch.cat((filt, filt_neg), dim=1)
-            n_filt *= 2
-
-            filt_norm = torch.sqrt(torch.sum(filt * filt, dim=0, keepdim=True) + 1e-4)
-            norm_mat = torch.matmul(filt_norm.t(), filt_norm)
-            inner_pro = torch.matmul(filt.t(), filt)
-            inner_pro /= norm_mat
-
-            cross_terms = (2.0 - 2.0 * inner_pro + torch.diag(torch.tensor([1.0] * n_filt)).cuda())
-            final = torch.pow(cross_terms, torch.ones_like(cross_terms) * (-0.5))
-            final -= torch.tril(final)
-            cnt = n_filt * (n_filt - 1) / 2.0
-            MHE_loss = 1 * torch.sum(final) / cnt
-
-        return MHE_loss
-
-    def forward(self):
-        mhe_loss = []
-        i = 0
-        with torch.no_grad():
-            for name in self.extracted_params:
-                weight = self.extracted_params[name]
-                # linear layer or conv layer
-                if len(weight.shape) == 2 or len(weight.shape) == 4:
-                    loss = self.mhe_loss(weight)
-                    mhe_loss.append(loss.cpu().detach().item())
-                    i = i + 1
-            mhe_loss = np.array(mhe_loss)
-        return mhe_loss.mean()
-'''
 
 class MHE_db:
     def __init__(self, model):
