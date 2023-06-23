@@ -137,14 +137,14 @@ python oft-control/test_oft_parallel.py \
   --coft
 ```
 5. To evaluate **OFT** results on the three tasks listed in the paper (landmark-to-image (L2I), canny-to-image (C2I) and segmentation map-to-image (S2I)), run the following scripts on the generated images.
-```console
+```bash
 python oft-control/eval_landmark.py
 ```
-```console
+```bash
 python oft-control/eval_canny.py
 ```
 Note, for evaluating the segmentation map-to-image (S2I) task, please install the [Segformer](https://github.com/NVlabs/SegFormer) repository. Run the following testing command on both the original and generated images.
-```console
+```bash
 python tools/test.py local_configs/segformer/B4/segformer.b4.512x512.ade.160k.py ./weights/segformer.b4.512x512.ade.160k.pth
 ```
 
