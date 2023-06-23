@@ -27,5 +27,4 @@ dependencies:
     - tqdm
     - torchmetrics[image]
     - face-alignment==1.3.4
-    - share
 
