@@ -14,7 +14,7 @@ Stay tuned, more information and code coming soon.
 
 - [x] Code for running controllable generation (ControlNet-like tasks)
 - [x] Code for running subject-driven generation (Dreambooth-like tasks)
-- [ ] Readme
+- [ ] Refine readme
 - [ ] Fast version of OFT
 - [ ] More examplar applications
 
