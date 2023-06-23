@@ -92,8 +92,8 @@ def generate_landmark2d(inputpath, savepath, n=0, device='cuda:0', vis=False):
 def landmark_comparison(lmk_folder, gt_lmk_folder, n=0):
     print(f'calculate reprojection error')
     lmk_err = []
-    gt_lmk_folder = './training/celebhq-text/celeba-hq-landmark2d'
-    with open('./training/Celebhq/val/prompt_val_blip_full.json', 'rt') as f: # fill50k, COCO
+    gt_lmk_folder = './data/celebhq-text/celeba-hq-landmark2d'
+    with open('./data/celebhq-text/prompt_val_blip_full.json', 'rt') as f: # fill50k, COCO
         for line in f:
             val_data = json.loads(line)
     for i in tqdm(range(2000)):
@@ -116,14 +116,9 @@ def landmark_comparison(lmk_folder, gt_lmk_folder, n=0):
 
 n = 0
 epoch = 19
-gt_lmk_folder = './training/celebhq-text/celeba-hq-landmark2d'
-input_folder = os.path.join('./log/image_log_opt_lora_CelebA_landmark_lr_5-6_pe_diff_mlp_r_4_cayley_4gpu/results', str(epoch))
+gt_lmk_folder = './data/celebhq-text/celeba-hq-landmark2d'
+input_folder = os.path.join('./data/image_log_opt_lora_CelebA_landmark_lr_5-6_pe_diff_mlp_r_4_cayley_4gpu/results', str(epoch))
 save_folder = os.path.join(input_folder, 'landmark')
 
 generate_landmark2d(input_folder, save_folder, n, device='cuda:0', vis=False)
 landmark_comparison(save_folder, gt_lmk_folder, n)
-
-
-# T2I: 25.842861528453618 / 27.7174585414979 / 23.754373429605327
-# 1e-5: 16.17
-# 5e-6: 16.18

@@ -71,14 +71,8 @@ if __name__ == '__main__':
 
     n = 0
     epoch = 9
-    # experiment = './log/image_log_lora_COCO_canny_8gpu' # [IOU]: 0.16249358979539114 [Accuracy]: 0.8426783195495605 [F1 Score]: 0.278544679272223
-    # experiment = './log/image_log_cldm_COCO_canny_4gpu' # [IOU]: 0.18977163663330127 [Accuracy]: 0.848788190460205 [F1 Score]: 0.3178471245560538
-    # experiment = './log/t2i_canny_4gpu' # [IOU]: 0.07803869407915275 [Accuracy]: 0.8239055061340332 [F1 Score]: 0.14330854234781343
-    # experiment = './log/sd_canny' # [IOU]: 0.049724708443740134 [Accuracy]: 0.8244535125732422 [F1 Score]: 0.09328981588306719
-    experiment = './log/image_log_opt_lora_COCO_canny_eps_1-3_pe_diff_mlp_r_4_cayley_4gpu' # [FID] 27.707968541924515 [IOU]: 0.1953904951867336 [Accuracy]: 0.8430354614257812 [F1 Score]: 0.3255332740111943
-    # experiment = './log/image_log_opt_lora_COCO_canny_lr_1e-05_pe_diff_mlp_r_4_cayley_4gpu' # [FID] 27.707968541924515 [IOU]: 0.1953904951867336 [Accuracy]: 0.8430354614257812 [F1 Score]: 0.3255332740111943
-    # experiment = './log/image_log_opt_lora_COCO_canny_eps_1-2_pe_diff_mlp_r_4_cayley_4gpu' # [FID] 27.707968541924515 [IOU]: 0.1953904951867336 [Accuracy]: 0.8430354614257812 [F1 Score]: 0.3255332740111943
-    
+    experiment = './log/image_log_oft_COCO_canny_eps_1-3_r_4_cayley_4gpu' 
+
     data_dir = os.path.join(experiment, 'source', str(epoch))
     result_dir = os.path.join(experiment, 'results', str(epoch))
     json_file = os.path.join(experiment, 'results.json')
@@ -92,13 +86,6 @@ if __name__ == '__main__':
 
     dataset = ResultFolderDataset(data_dir, result_dir, n=n, transform=transform)
     data_loader = DataLoader(dataset, batch_size=1, shuffle=False)
-
-    # prompts = []
-
-    # use_cuda = True
-    # net = Net(thres10hold=3.0, use_cuda=use_cuda)
-    # net = net.to(device)
-    # net.eval()
 
     apply_canny = CannyDetector()
 
@@ -120,28 +107,15 @@ if __name__ == '__main__':
         source_detected_map = apply_canny(source_image_np, low_threshold, high_threshold) / 255
         result_detected_map = apply_canny(result_image_np, low_threshold, high_threshold) / 255
 
-        # l1 loss
-        # loss = loss + np.mean(np.abs(source_detected_map - result_detected_map))
-
         iou_score, accuracy, f1_score = calculate_metrics(result_detected_map, source_detected_map)
 
         iou_score_mean = iou_score_mean + iou_score
         accuracy_mean = accuracy_mean +  accuracy
         f1_score_mean = f1_score_mean + f1_score
 
-        # source_image_th = torch.from_numpy(source_image_np)
-        # result_image_th = torch.from_numpy(result_image_np)
-        # ssim_val = ssim(source_image_th.unsqueeze(0), result_image_th.unsqueeze(0), data_range=255, size_average=False)
-        # ssim_mean = ssim_mean + ssim_val.item()
-
-        # pixel accuracy
-        # accuracy = np.sum(source_detected_map == result_detected_map) / source_detected_map.size
-        # loss = loss + accuracy
-
     iou_score_mean = iou_score_mean / len(dataset)
     accuracy_mean = accuracy_mean / len(dataset)
     f1_score_mean = f1_score_mean / len(dataset)
-    # ssim_mean = ssim_mean / len(dataset)
 
     print(experiment)
-    print('[Canny]', '[IOU]:', iou_score_mean, '[F1 Score]:', f1_score_mean) #, '[SSIM]:', ssim_mean)
+    print('[Canny]', '[IOU]:', iou_score_mean, '[F1 Score]:', f1_score_mean)
