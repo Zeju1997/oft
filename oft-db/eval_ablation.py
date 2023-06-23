@@ -486,14 +486,15 @@ def lpips_image(image_dir, epoch=None):
 
 
 if __name__ == "__main__":
-    # image_dir = './log_cot_6e-5' # './log_db' './log_lora' './log_cot' './log_cot' './log_cot_6e-5'
-    image_dir = './log_cot_6e-5_unconstrained'
-    epoch = 4 # None, 2, 4, 6
+    # image_dir = './log_oft_6e-5'
+    image_dir = './log_oft_6e-5_unconstrained'
+    epoch = 4
 
-    # sim, criterion = clip_text(image_dir, epoch) # db: 0.1687191128730774 # lora: 0.1668722778558731 # cot: 0.16917628049850464
+    # four different evaluation metrics
+    # sim, criterion = clip_text(image_dir, epoch)
     sim, criterion = dino(image_dir, epoch)
-    # sim, criterion = clip_image(image_dir, epoch) # db: 18.00 # lora: 18.00 # cot: 18.00
-    # sim, criterion = lpips_image(image_dir, epoch) # db: 0.737432599067688 # lora: 18.00 # cot: 0.7569993138313293
+    # sim, criterion = clip_image(image_dir, epoch)
+    # sim, criterion = lpips_image(image_dir, epoch)
 
     if epoch:
         name = image_dir + '-' + str(epoch)
