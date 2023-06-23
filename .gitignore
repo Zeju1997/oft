@@ -21,6 +21,4 @@ build/
 *.pkl
 *.zip
 
-README.md
-
 __pycache__

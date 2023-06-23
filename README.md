@@ -23,7 +23,7 @@ We expect the first version of our code will be released on 23rd June. Thanks!
 - [ ] Fast version of OFT
 - [ ] More examplar applications
 
-
+<!--
 ## Getting Started
 
 ### Downloading Data
@@ -172,6 +172,7 @@ Within the 'oft-db' folder, run the training script:
 ```bash
 ./train_dreambooth_oft.sh
 ```
+-->
 
 ## Citing our work
   ```bibtex
