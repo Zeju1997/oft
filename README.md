@@ -9,10 +9,10 @@ Stay tuned, more information and code coming soon.
 ## To-Do
 
 - [x] Code for running controllable generation (ControlNet-like tasks)
-- [ ] Code for running subject-driven generation (Dreambooth-like tasks)
+- [x] Code for running subject-driven generation (Dreambooth-like tasks)
 - [ ] Readme
-
-We expect the first version of our code will be released on 23rd June. Thanks!
+- [ ] Fast version of OFT
+- [ ] More examplar applications
 
 
 
@@ -162,7 +162,7 @@ This project builds upon the work of several other repositories. We would like t
 
 ## License
 
-Add information about your license here. If you're unsure what license to use, GitHub provides a [licensing guide](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/licensing-a-repository) that might help.
+MIT
 
 ---
 
