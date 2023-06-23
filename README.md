@@ -85,11 +85,6 @@ conda env create -f environment.yml
 pip install –upgrade diffusers[torch]
 ```
 
-4. Optional, install [xformers](https://github.com/facebookresearch/xformers) 
-```bash
-pip install -U xformers
-```
-
 ## Usage
 
 There are only two hyperparameters that one need to adjusted, we noticed that generally with more number of blocks the fine-tuning results become worse. Block sharing is default false, but might work if the control is very simple.
