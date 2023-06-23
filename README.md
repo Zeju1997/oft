@@ -14,11 +14,16 @@
 
 Large text-to-image diffusion models have impressive capabilities in generating photorealistic images from text prompts. How to effectively guide or control these powerful models to perform different downstream tasks becomes an important open problem. To tackle this challenge, we introduce a principled finetuning method -- Orthogonal Finetuning (OFT), for adapting text-to-image diffusion models to downstream tasks. Unlike existing methods, OFT can provably preserve hyperspherical energy which characterizes the pairwise neuron relationship on the unit hypersphere. We find that this property is crucial for preserving the semantic generation ability of text-to-image diffusion models. To improve finetuning stability, we further propose Constrained Orthogonal Finetuning (COFT) which imposes an additional radius constraint to the hypersphere. Specifically, we consider two important finetuning text-to-image tasks: subject-driven generation where the goal is to generate subject-specific images given a few images of a subject and a text prompt, and controllable generation where the goal is to enable the model to take in additional control signals. We empirically show that our OFT framework outperforms existing methods in generation quality and convergence speed.
 
-Stay tuned, more information and code coming soon.
+<!-- TABLE OF CONTENTS -->
+***Table of Contents***: - <a href="#controllable-generation">Controllable Generation</a> - <a href="#subject-driven-generation">Subject-driven Generation</a> - <a href="#toy-experiment">Toy experiment</a>
+
+
 
 
 ## Update
 - **2023.6.23**: initial commit. Code for running controllable generation (ControlNet-like tasks) and subject-driven generation (Dreambooth-like tasks).
+
+We are working on adding in more applications and new OFT variants. Stay tuned!
 
 
 ## TODO
@@ -148,7 +153,6 @@ Note, for evaluating the segmentation map-to-image (S2I) task, please install th
 python tools/test.py local_configs/segformer/B4/segformer.b4.512x512.ade.160k.py ./weights/segformer.b4.512x512.ade.160k.pth
 ```
 
-#### 
 
 ### Subject-driven Generation
 1. Similar to the example for dreamfusion, you can run the finetuning using oft with the following command. The three paramters that need to be adjusted are
@@ -185,7 +189,7 @@ Within the 'oft-db' folder, run the training script:
 ./train_dreambooth_oft.sh
 ```
 
-### Toy experiment: 
+### Toy experiment
 
 <div align="center">
   <img src="assets/toy_exp.png" width="300"/>
