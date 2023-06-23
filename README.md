@@ -29,7 +29,7 @@ We expect the first version of our code will be released on 23rd June. Thanks!
 ### Downloading Data
 
 1. Run the scripts in the 'scripts' folder to automatically download the preprocessed data required for `oft-control`, e.g., for running the densepose-to-image experiment, run the script:
-```console
+```bash
 bash scripts/dataset_setup_control_deepfashion.sh
 ```
 
@@ -71,12 +71,12 @@ data
 Follow these steps to set up the project environment:
 
 1. Clone the oft repository. We'll call the directory that you cloned oft as $OFT_ROOT.
-```console
+```bash
 git clone https://github.com/Zeju1997/oft.git
 ```
 
 2. Construct the virtual environment:
-```console
+```bash
 conda env create -f environment.yml
 ```
 
@@ -103,7 +103,7 @@ There are only two hyperparameters that one need to adjusted, we noticed that ge
 ### Controllable Generation
 
 1. Create the model with additional **OFT** parameters:
-```console
+```bash
 python oft-control/tool_add_control_oft.py \
   --input_path=./models/v1-5-pruned.ckpt \
   --output_path=./models/control_sd15_ini_oft.ckpt \
@@ -112,18 +112,18 @@ python oft-control/tool_add_control_oft.py \
   --coft
 ```
 2. Specify the control signal and dataset. Train the model specify the same hyperparameters as above:
-```console
+```bash
 python oft-control/train.py \
   --eps=1e-3 \
   --r=4 \
   --coft
 ```
 3. Because **OFT** does not affect the neuron norm, the neuron magnitude might be sub-optimal. Run the following script for performing magnitude post-stage fitting after training an oft to improve on the magnitude.
-```console
+```bash
 python oft-control/train_with_norm.py 
 ```
 4. After finetuning with **OFT**, run inference to generate images based on control signal. Because the inference takes some time, to perform large scale evaluation, we split the dataset into different sub-datasets and run inference on multiple gpus:
-```console
+```bash
 python oft-control/test_oft_parallel.py \
   --img_ID=1 \
   --eps=1e-3 \
