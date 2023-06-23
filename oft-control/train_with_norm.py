@@ -12,33 +12,34 @@ if parent_dir not in sys.path:
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader
-from cldm.logger import ImageLogger
-from cldm.model import create_model, load_state_dict
+from oldm.logger import ImageLogger
+from oldm.model import create_model, load_state_dict
 from datasets.utils import return_dataset
 
-from cldm.opt_lora import inject_trainable_opt, inject_trainable_opt_conv, inject_trainable_opt_extended, inject_trainable_opt_with_norm
+from oft import inject_trainable_oft, inject_trainable_oft_conv, inject_trainable_oft_extended, inject_trainable_oft_with_norm
 
-import multiprocessing
+import argparse
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--input_path', type=str, default='./models/v1-5-pruned.ckpt')
+parser.add_argument('--r', type=int, default=4)
+parser.add_argument('--eps', type=float, default=1e-5)
+parser.add_argument('--coft', action="store_true")
+parser.add_argument('--block_share', action="store_true", default=False)
+
+args = parser.parse_args()
 
 
 if __name__ == "__main__":
-    # multiprocessing.freeze_support()
-
+    # control signal
     control = 'segm' # segm, sketch, densepose, depth, canny, canny1k, canny5k, canny20k, canny50k
 
-    #import argparse
-    #parser = argparse.ArgumentParser()
-    #parser.add_argument('--n_samples', type=int, help='Number of samples')
-    #args = parser.parse_args()
-    #n_samples = args.n_samples
-
     # create dataset
-    train_dataset, val_dataset, data_name, logger_freq, max_epochs = return_dataset(control) # , n_samples=n_samples)
+    train_dataset, val_dataset, data_name, logger_freq, max_epochs = return_dataset(control)
     max_epochs = 5
 
     # Configs
-    # resume_path = './models/control_sd15_ini_opt_lora_conv.ckpt' # control_sd15_ini, control_sd15_ini_r4
-
     batch_size = 16 # 4
     num_samples = 6
     plot_frequency = 100
@@ -47,10 +48,7 @@ if __name__ == "__main__":
     only_mid_control = False
     num_gpus = torch.cuda.device_count()
 
-    # experiment = 'opt_lora_{}_{}_lr_1-5_pe_diff_mlp_r_4_cayley_{}gpu'.format(data_name, control, num_gpus)
-    # experiment = 'opt_lora_{}_{}_eps_1-3_pe_diff_mlp_r_4_cayley_{}gpu'.format(data_name, control, num_gpus)    
-    # experiment = 'ablation3_{}_opt_lora_{}_{}_eps_1-4_pe_diff_mlp_r_4_cayley_{}gpu'.format(n_samples, data_name, control, num_gpus)
-    experiment = 'log/image_log_opt_lora_{}_{}_eps_1-3_pe_diff_mlp_r_4_cayley_{}gpu'.format(data_name, control, num_gpus)    
+    experiment = 'log/image_log_oft_{}_{}_eps_1-3_pe_diff_mlp_r_4_cayley_{}gpu'.format(data_name, control, num_gpus)    
     epoch = 19
 
     resume_path = os.path.join(experiment, f'model-epoch={epoch:02d}.ckpt')
@@ -61,10 +59,8 @@ if __name__ == "__main__":
     # First use cpu to load models. Pytorch Lightning will automatically move it to GPUs.
     model = create_model('./models/opt_lora_ldm_v15.yaml').cpu()
     model.model.requires_grad_(False)
-    # unet_opt_params, train_names = inject_trainable_opt(model.model)
-    # unet_opt_params, train_names = inject_trainable_opt_extended(model.model)
-    # unet_opt_params, train_names = inject_trainable_opt_conv(model.model)
-    unet_opt_params, train_names = inject_trainable_opt_with_norm(model.model)
+
+    unet_opt_params, train_names = inject_trainable_oft_with_norm(model.model, r=args.r, eps=args.eps, is_coft=args.coft, block_share=args.block_share)
 
     for name, param in model.named_parameters():
         if 'scaling_factors' in name:
@@ -72,18 +68,10 @@ if __name__ == "__main__":
         else:
             param.requires_grad = False
 
-
-    #with open('model_names_with_norm.txt', 'w') as f:
-    #    for name, param in model.named_parameters():
-    #        if param.requires_grad:
-    #            f.write(str(name) + '\n')
-
     model.load_state_dict(load_state_dict(resume_path, location='cpu'), strict=False)
     model.learning_rate = learning_rate
     model.sd_locked = sd_locked
     model.only_mid_control = only_mid_control
-
-    #experiment1 = 'opt_lora_{}_{}_eps_1-3_pe_diff_mlp_r_4_cayley_with_norm_{}gpu'.format(data_name, control, num_gpus)    
 
     checkpoint_callback = ModelCheckpoint(
         dirpath='log/image_log_' + experiment,

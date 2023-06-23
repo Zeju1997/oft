@@ -48,7 +48,9 @@ if __name__ == "__main__":
     sd_locked = True
     only_mid_control = False
     num_gpus = torch.cuda.device_count()
-    experiment = 'oft_{}_{}_lr_1-5_pe_diff_mlp_r_4_cayley_{}gpu'.format(data_name, control, num_gpus)
+    experiment = 'oft_{}_{}_eps_{}_pe_diff_mlp_r_{}_{}gpu'.format(data_name, control, args.eps, args.r, num_gpus)
+    print(experiment)
+    sys.exit()
 
     # First use cpu to load models. Pytorch Lightning will automatically move it to GPUs.
     model = create_model('./configs/oft_ldm_v15.yaml').cpu()

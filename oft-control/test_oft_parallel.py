@@ -1,5 +1,4 @@
 from share import *
-import config
 
 import sys
 import os
@@ -10,6 +9,7 @@ import numpy as np
 import torch
 import random
 import json
+import argparse
 
 file_path = os.path.abspath(__file__)
 parent_dir = os.path.abspath(os.path.dirname(file_path) + '/..')
@@ -18,13 +18,9 @@ if parent_dir not in sys.path:
 
 from PIL import Image
 from pytorch_lightning import seed_everything
-from annotator.util import resize_image, HWC3
-from annotator.midas import MidasDetector
-from cldm.model import create_model, load_state_dict
-from cldm.ddim_hacked import DDIMSampler
-from cldm.lora import inject_trainable_lora, extract_lora_ups_down, inject_trainable_lora_extended
-
-from cldm.opt_lora import inject_trainable_opt, inject_trainable_opt_conv, inject_trainable_opt_extended, inject_trainable_opt_with_norm
+from oldm.model import create_model, load_state_dict
+from oldm.ddim_hacked import DDIMSampler
+from oft import inject_trainable_oft, inject_trainable_oft_conv, inject_trainable_oft_extended, inject_trainable_oft_with_norm
 
 from datasets.utils import return_dataset
 
@@ -72,19 +68,28 @@ def process(input_image, prompt, hint_image, a_prompt, n_prompt, num_samples, im
     # return [255 - hint_image] + results
     return [input_image] + [hint_image] + results
 
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--r', type=int, default=4)
+parser.add_argument('--eps', type=float, default=1e-5)
+parser.add_argument('--coft', action="store_true")
+parser.add_argument('--block_share', action="store_true", default=False)
+parser.add_argument('--img_ID', type=int, default=0)
+parser.add_argument('--num_samples', type=int, default=6)
+parser.add_argument('--batch', type=int, default=20)
+parser.add_argument('--num_gpus', type=int, default=8)
+
+args = parser.parse_args()
 
 if __name__ == '__main__':
     # Configs
-    img_ID = int(sys.argv[1])
-
-    epoch = 19
-    control = 'segm'
+    epoch = 0
+    control = 'densepose'
     _, dataset, data_name, logger_freq, max_epochs = return_dataset(control, full=True)
 
     # specify the experiment name
-    experiment = './log/image_log_opt_lora_{}_{}_eps_1-3_pe_diff_mlp_r_4_cayley_4gpu'.format(data_name, control)
+    experiment = './log/image_log_oft_{}_{}_eps_{}_pe_diff_mlp_r_{}_{}gpu'.format(data_name, control, args.eps, args.r, args.num_gpus)
     
-    num_samples = 30
     resume_path = os.path.join(experiment, f'model-epoch={epoch:02d}.ckpt')
     sd_locked = True
     only_mid_control = False
@@ -98,23 +103,23 @@ if __name__ == '__main__':
     hint_dir = os.path.join(experiment, 'hints', str(epoch))
     os.makedirs(hint_dir, exist_ok=True)
 
-    model = create_model('./models/opt_lora_ldm_v15.yaml').cpu()
+    model = create_model('./configs/oft_ldm_v15.yaml').cpu()
     model.model.requires_grad_(False)
 
-    unet_opt_params, train_names = inject_trainable_opt(model.model)
-    # unet_opt_params, train_names = inject_trainable_opt_conv(model.model)
-    # unet_opt_params, train_names = inject_trainable_opt_extended(model.model)
-    # unet_opt_params, train_names = inject_trainable_opt_with_norm(model.model)
+    unet_lora_params, train_names = inject_trainable_oft(model.model, r=args.r, eps=args.eps, is_coft=args.coft, block_share=args.block_share)
+    # unet_lora_params, train_names = inject_trainable_oft_conv(model.model, r=args.r, eps=args.eps, is_coft=args.coft, block_share=args.block_share)
+    # unet_lora_params, train_names = inject_trainable_oft_extended(model.model, r=args.r, eps=args.eps, is_coft=args.coft, block_share=args.block_share)
+    # unet_opt_params, train_names = inject_trainable_oft_with_norm(model.model, r=args.r, eps=args.eps, is_coft=args.coft, block_share=args.block_share)
     
     model.load_state_dict(load_state_dict(resume_path, location='cuda'))
     model = model.cuda()
     ddim_sampler = DDIMSampler(model)
 
-    pack = range(0, len(dataset), 20)
+    pack = range(0, len(dataset), args.batch)
     formatted_data = {}
-    for index in range(1):
+    for index in range(args.batch):
         # import ipdb; ipdb.set_trace()
-        start_point = pack[img_ID]
+        start_point = pack[args.img_ID]
         idx = start_point + index
 
         data = dataset[idx]
@@ -128,7 +133,7 @@ if __name__ == '__main__':
                 hint_image=hint,
                 a_prompt="",
                 n_prompt="",
-                num_samples=num_samples,
+                num_samples=args.num_samples,
                 image_resolution=512,
                 ddim_steps=50,
                 guess_mode=False,

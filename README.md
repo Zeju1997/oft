@@ -23,7 +23,7 @@ We expect the first version of our code will be released on 23rd June. Thanks!
 - [ ] Fast version of OFT
 - [ ] More examplar applications
 
-<!--
+
 ## Getting Started
 
 ### Downloading Data
@@ -129,8 +129,8 @@ python oft-control/train_with_norm.py
 ```
 4. After finetuning with **OFT**, run inference to generate images based on control signal. Because the inference takes some time, to perform large scale evaluation, we split the dataset into different sub-datasets and run inference on multiple gpus:
 ```console
-python oft-control/test_oft_parallel.py /
-  --idx==1 \
+python oft-control/test_oft_parallel.py \
+  --img_ID=1 \
   --eps=1e-3 \
   --r=4 \
   --coft
@@ -172,7 +172,7 @@ Within the 'oft-db' folder, run the training script:
 ```bash
 ./train_dreambooth_oft.sh
 ```
--->
+
 
 ## Citing our work
   ```bibtex
