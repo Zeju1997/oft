@@ -147,8 +147,15 @@ accelerate launch train_dreambooth_oft.py \
   --coft
 ```
 
-
-## Contributing
+## Citing our work
+  ```bibtex
+    @InProceedings{Qiu2023OFT,
+      title={Controlling Text-to-Image Diffusion by Orthogonal Finetuning},
+      author={Qiu, Zeju and Liu, Weiyang and Feng, Haiwen and Xue, Yuxuan and Feng, Yao and Liu, Zhen and Zhang, Dan and Weller, Adrian and Schölkopf, Bernhard},
+      journal={arXiv preprint arXiv:2306.07280},
+      year={2023}
+    }
+  ```
 
 
 ## Acknowledgements
@@ -159,10 +166,6 @@ This project builds upon the work of several other repositories. We would like t
 - [ControlNet](https://github.com/lllyasviel/ControlNet): Official implementation of Adding Conditional Control to Text-to-Image Diffusion Models.
 - [Diffusers](https://github.com/huggingface/diffusers): A library for state-of-the-art pretrained diffusion models.
 
-
-## License
-
-MIT
 
 ---
 
