@@ -198,7 +198,7 @@ This project builds upon the work of several other repositories. We would like t
 - [lora](https://github.com/cloneofsimo/lora): Low-rank Adaptation for Fast Text-to-Image Diffusion Fine-tuning.
 - [ControlNet](https://github.com/lllyasviel/ControlNet): Official implementation of Adding Conditional Control to Text-to-Image Diffusion Models.
 - [Diffusers](https://github.com/huggingface/diffusers): A library for state-of-the-art pretrained diffusion models.
-
+- [OPT](https://github.com/wy1iu/OPT): Official implementation of Orthogonal Over-Parameterized Training.
 
 ---
 
