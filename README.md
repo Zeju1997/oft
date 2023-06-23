@@ -170,14 +170,14 @@ Within the 'oft-db' folder, run the training script:
 
 
 ## Citing our work
-  ```bibtex
-    @InProceedings{Qiu2023OFT,
-      title={Controlling Text-to-Image Diffusion by Orthogonal Finetuning},
-      author={Qiu, Zeju and Liu, Weiyang and Feng, Haiwen and Xue, Yuxuan and Feng, Yao and Liu, Zhen and Zhang, Dan and Weller, Adrian and Schölkopf, Bernhard},
-      journal={arXiv preprint arXiv:2306.07280},
-      year={2023}
-    }
-  ```
+```bibtex
+@InProceedings{Qiu2023OFT,
+  title={Controlling Text-to-Image Diffusion by Orthogonal Finetuning},
+  author={Qiu, Zeju and Liu, Weiyang and Feng, Haiwen and Xue, Yuxuan and Feng, Yao and Liu, Zhen and Zhang, Dan and Weller, Adrian and Schölkopf, Bernhard},
+  journal={arXiv preprint arXiv:2306.07280},
+  year={2023}
+}
+```
 
 
 ## Acknowledgements
