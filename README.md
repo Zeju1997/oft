@@ -1,6 +1,10 @@
 # Controlling Text-to-Image Diffusion by Orthogonal Finetuning
 
-## Description
+<div align="center">
+  <img src="assets/teaser.png" width="900"/>
+</div>
+
+## Introduction
 
 Large text-to-image diffusion models have impressive capabilities in generating photorealistic images from text prompts. How to effectively guide or control these powerful models to perform different downstream tasks becomes an important open problem. To tackle this challenge, we introduce a principled finetuning method -- Orthogonal Finetuning (OFT), for adapting text-to-image diffusion models to downstream tasks. Unlike existing methods, OFT can provably preserve hyperspherical energy which characterizes the pairwise neuron relationship on the unit hypersphere. We find that this property is crucial for preserving the semantic generation ability of text-to-image diffusion models. To improve finetuning stability, we further propose Constrained Orthogonal Finetuning (COFT) which imposes an additional radius constraint to the hypersphere. Specifically, we consider two important finetuning text-to-image tasks: subject-driven generation where the goal is to generate subject-specific images given a few images of a subject and a text prompt, and controllable generation where the goal is to enable the model to take in additional control signals. We empirically show that our OFT framework outperforms existing methods in generation quality and convergence speed.
 
@@ -10,8 +14,14 @@ Stay tuned, more information and code coming soon.
 ## Update
 - **2023.6.23**: initial commit. Code for running controllable generation (ControlNet-like tasks) and subject-driven generation (Dreambooth-like tasks).
 
-We expect the first version of our code will be released on 23rd June. Thanks!
 
+## TODO
+We expect the first version of our code will be released on 23rd June. Thanks!
+- [x] Code for running controllable generation (ControlNet-like tasks)
+- [x] Code for running subject-driven generation (Dreambooth-like tasks)
+- [ ] Refine readme
+- [ ] Fast version of OFT
+- [ ] More examplar applications
 
 
 ## Getting Started
@@ -163,8 +173,15 @@ Within the 'oft-db' folder, run the training script:
 ./train_dreambooth_oft.sh
 ```
 
-
-## Contributing
+## Citing our work
+  ```bibtex
+    @InProceedings{Qiu2023OFT,
+      title={Controlling Text-to-Image Diffusion by Orthogonal Finetuning},
+      author={Qiu, Zeju and Liu, Weiyang and Feng, Haiwen and Xue, Yuxuan and Feng, Yao and Liu, Zhen and Zhang, Dan and Weller, Adrian and Schölkopf, Bernhard},
+      journal={arXiv preprint arXiv:2306.07280},
+      year={2023}
+    }
+  ```
 
 
 ## Acknowledgements
@@ -175,10 +192,6 @@ This project builds upon the work of several other repositories. We would like t
 - [ControlNet](https://github.com/lllyasviel/ControlNet): Official implementation of Adding Conditional Control to Text-to-Image Diffusion Models.
 - [Diffusers](https://github.com/huggingface/diffusers): A library for state-of-the-art pretrained diffusion models.
 
-
-## License
-
-Add information about your license here. If you're unsure what license to use, GitHub provides a [licensing guide](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/licensing-a-repository) that might help.
 
 ---
 
