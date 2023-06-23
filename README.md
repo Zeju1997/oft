@@ -4,6 +4,12 @@
   <img src="assets/teaser.png" width="900"/>
 </div>
 
+<p align="center">
+  <a href="https://oft.wyliu.com/static/files/oft_v1.pdf">Paper</a> / <a href="https://arxiv.org/abs/2306.07280">arXiv</a> / <a href="https://oft.wyliu.com">Project Page</a>
+</p>
+
+
+
 ## Introduction
 
 Large text-to-image diffusion models have impressive capabilities in generating photorealistic images from text prompts. How to effectively guide or control these powerful models to perform different downstream tasks becomes an important open problem. To tackle this challenge, we introduce a principled finetuning method -- Orthogonal Finetuning (OFT), for adapting text-to-image diffusion models to downstream tasks. Unlike existing methods, OFT can provably preserve hyperspherical energy which characterizes the pairwise neuron relationship on the unit hypersphere. We find that this property is crucial for preserving the semantic generation ability of text-to-image diffusion models. To improve finetuning stability, we further propose Constrained Orthogonal Finetuning (COFT) which imposes an additional radius constraint to the hypersphere. Specifically, we consider two important finetuning text-to-image tasks: subject-driven generation where the goal is to generate subject-specific images given a few images of a subject and a text prompt, and controllable generation where the goal is to enable the model to take in additional control signals. We empirically show that our OFT framework outperforms existing methods in generation quality and convergence speed.
@@ -131,14 +137,14 @@ python oft-control/test_oft_parallel.py \
   --coft
 ```
 5. To evaluate **OFT** results on the three tasks listed in the paper (landmark-to-image (L2I), canny-to-image (C2I) and segmentation map-to-image (S2I)), run the following scripts on the generated images.
-```console
+```bash
 python oft-control/eval_landmark.py
 ```
-```console
+```bash
 python oft-control/eval_canny.py
 ```
 Note, for evaluating the segmentation map-to-image (S2I) task, please install the [Segformer](https://github.com/NVlabs/SegFormer) repository. Run the following testing command on both the original and generated images.
-```console
+```bash
 python tools/test.py local_configs/segformer/B4/segformer.b4.512x512.ade.160k.py ./weights/segformer.b4.512x512.ade.160k.pth
 ```
 

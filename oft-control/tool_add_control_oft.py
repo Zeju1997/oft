@@ -16,7 +16,8 @@ os.environ['HF_HOME'] = '/tmp'
 # output_path = sys.argv[2]
 
 import torch
-from share import *
+from oldm.hack import disable_verbosity
+disable_verbosity()
 from oldm.model import create_model
 from oft import inject_trainable_oft, inject_trainable_oft_conv, inject_trainable_oft_extended
 
