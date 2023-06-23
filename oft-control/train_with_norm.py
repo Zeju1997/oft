@@ -1,4 +1,5 @@
-from share import *
+from oldm.hack import disable_verbosity
+disable_verbosity()
 
 import os
 import sys
