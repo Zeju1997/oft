@@ -7,7 +7,6 @@ License: Apache License 2.0
 """
 
 
-
 import json
 import math
 from itertools import groupby
@@ -519,7 +518,7 @@ def inject_trainable_oft(
     verbose: bool = False,
     r: int = 4,
     eps: float = 1e-5,
-    coft: bool = True,
+    is_coft: bool = True,
     block_share: bool = False,
 ):
     """
@@ -544,7 +543,7 @@ def inject_trainable_oft(
             _child_module.bias is not None,
             r=r,
             eps=eps,
-            is_coft=coft,
+            is_coft=is_coft,
             block_share=block_share,
         )
         _tmp.OFT.weight = weight
@@ -569,7 +568,7 @@ def inject_trainable_oft_with_norm(
     verbose: bool = False,
     r: int = 4,
     eps: float = 1e-5,
-    coft: bool = True,
+    is_coft: bool = True,
     block_share: bool = False,
 ):
     """
@@ -591,7 +590,11 @@ def inject_trainable_oft_with_norm(
         _tmp = OFTInjectedLinear_with_norm(
             _child_module.in_features,
             _child_module.out_features,
-            _child_module.bias is not None
+            _child_module.bias is not None,
+            r=r,
+            eps=eps,
+            is_coft=is_coft,
+            block_share=block_share,
         )
         _tmp.OFT.weight = weight
         if bias is not None:
@@ -616,7 +619,7 @@ def inject_trainable_oft_extended(
     verbose: bool = False,
     r: int = 4,
     eps: float = 1e-5,
-    coft: bool = True,
+    is_coft: bool = True,
     block_share: bool = False,
 ):
     """
@@ -636,6 +639,10 @@ def inject_trainable_oft_extended(
                 _child_module.in_features,
                 _child_module.out_features,
                 _child_module.bias is not None,
+                r=r,
+                eps=eps,
+                is_coft=is_coft,
+                block_share=block_share,
             )
             _tmp.OFT.weight = weight
             if bias is not None:
@@ -652,6 +659,9 @@ def inject_trainable_oft_extended(
                 #_child_module.dilation,
                 #_child_module.groups,
                 _child_module.bias is not None,
+                eps=eps,
+                is_coft=is_coft,
+                block_share=block_share,
             )
 
             _tmp.OFT.weight = weight
@@ -679,7 +689,8 @@ def inject_trainable_oft_conv(
     verbose: bool = False,
     r: int = 4,
     eps: float = 1e-5,
-    coft: bool = True
+    is_coft: bool = True,
+    block_share: bool = False,
 ):
     """
     inject lora into model, and returns lora parameter groups.
@@ -703,6 +714,9 @@ def inject_trainable_oft_conv(
                 # _child_module.dilation,
                 # _child_module.groups,
                 _child_module.bias is not None,
+                eps=eps,
+                is_coft=is_coft,
+                block_share=block_share,
             )
 
             _tmp.OFT.weight = weight

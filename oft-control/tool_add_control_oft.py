@@ -50,9 +50,9 @@ def get_node_name(name, parent_name):
 model = create_model(config_path='./configs/oft_ldm_v15.yaml')
 model.model.requires_grad_(False)
 
-unet_lora_params, train_names = inject_trainable_oft(model.model, r=args.r, eps=args.eps, coft=args.coft, block_share=args.block_share)
-# unet_lora_params, train_names = inject_trainable_oft_extended(model.model, r=args.r, eps=args.eps, coft=args.coft, block_share=args.block_share)
-# unet_lora_params, train_names = inject_trainable_oft_conv(model.model, r=args.r, eps=args.eps, coft=args.coft, block_share=args.block_share)
+unet_lora_params, train_names = inject_trainable_oft(model.model, r=args.r, eps=args.eps, is_coft=args.coft, block_share=args.block_share)
+# unet_lora_params, train_names = inject_trainable_oft_conv(model.model, r=args.r, eps=args.eps, is_coft=args.coft, block_share=args.block_share)
+# unet_lora_params, train_names = inject_trainable_oft_extended(model.model, r=args.r, eps=args.eps, is_coft=args.coft, block_share=args.block_share)
 
 pretrained_weights = torch.load(args.input_path)
 if 'state_dict' in pretrained_weights:

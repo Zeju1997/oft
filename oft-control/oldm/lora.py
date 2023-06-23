@@ -1,3 +1,11 @@
+"""
+This script is retrived from lora available at: 
+https://github.com/cloneofsimo/lora/blob/master/lora_diffusion/lora.py
+
+Original Author: Simo Ryu
+License: Apache License 2.0
+"""
+
 import json
 import math
 from itertools import groupby

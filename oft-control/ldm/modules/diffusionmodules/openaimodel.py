@@ -17,7 +17,6 @@ from ldm.modules.diffusionmodules.util import (
 )
 from ldm.modules.attention import SpatialTransformer
 from ldm.util import exists
-from ldm.modules.attention_opt import SpatialTransformer_opt
 
 
 # dummy replace
@@ -82,8 +81,6 @@ class TimestepEmbedSequential(nn.Sequential, TimestepBlock):
             if isinstance(layer, TimestepBlock):
                 x = layer(x, emb)
             elif isinstance(layer, SpatialTransformer):
-                x = layer(x, context)
-            elif isinstance(layer, SpatialTransformer_opt):
                 x = layer(x, context)
             else:
                 x = layer(x)

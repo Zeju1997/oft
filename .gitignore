@@ -2,10 +2,11 @@
 *.log
 
 # Ignore folder
-lightning_logs/
 oft-control/log/
 oft-db/data/
 oft-db/log_cot/
+lightning_logs/
+log/
 
 # Ignore the 'build' folder
 build/
@@ -18,6 +19,7 @@ build/
 *.pth
 *.mat
 *.pkl
+*.zip
 
 README.md
 

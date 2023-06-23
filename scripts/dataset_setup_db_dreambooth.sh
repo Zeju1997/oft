@@ -1,7 +1,5 @@
 #!/bin/bash
 
-cd ..
-
 if [ ! -d "data" ]; then
   mkdir data
 fi

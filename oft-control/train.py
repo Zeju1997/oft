@@ -18,12 +18,22 @@ from datasets.utils import return_dataset
 
 from oft import inject_trainable_oft, inject_trainable_oft_conv, inject_trainable_oft_extended, inject_trainable_oft_with_norm
 
-import multiprocessing
+import argparse
+
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--r', type=int, default=4)
+parser.add_argument('--eps', type=float, default=1e-5)
+parser.add_argument('--coft', action="store_true")
+parser.add_argument('--block_share', action="store_true", default=False)
+
+args = parser.parse_args()
 
 
 if __name__ == "__main__":
     # specify the control signal and dataset
-    control = 'segm' # segm, sketch, densepose, depth, canny, canny1k, canny5k, canny20k, canny50k
+    control = 'densepose' # segm, sketch, densepose, depth, canny, canny1k, canny5k, canny20k, canny50k
 
     # create dataset
     train_dataset, val_dataset, data_name, logger_freq, max_epochs = return_dataset(control) # , n_samples=n_samples)
@@ -45,10 +55,10 @@ if __name__ == "__main__":
     model.model.requires_grad_(False)
     
     # inject trainable oft parameters
-    unet_opt_params, train_names = inject_trainable_oft(model.model)
-    # unet_opt_params, train_names = inject_trainable_oft_extended(model.model)
-    # unet_opt_params, train_names = inject_trainable_oft_conv(model.model)
-
+    unet_lora_params, train_names = inject_trainable_oft(model.model, r=args.r, eps=args.eps, is_coft=args.coft, block_share=args.block_share)
+    # unet_lora_params, train_names = inject_trainable_oft_conv(model.model, r=args.r, eps=args.eps, is_coft=args.coft, block_share=args.block_share)
+    # unet_lora_params, train_names = inject_trainable_oft_extended(model.model, r=args.r, eps=args.eps, is_coft=args.coft, block_share=args.block_share)
+    
     model.load_state_dict(load_state_dict(resume_path, location='cpu'))
     model.learning_rate = learning_rate
     model.sd_locked = sd_locked
