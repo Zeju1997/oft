@@ -20,5 +20,6 @@ build/
 *.mat
 *.pkl
 *.zip
+*.tgz
 
 __pycache__

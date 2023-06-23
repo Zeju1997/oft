@@ -185,6 +185,18 @@ Within the 'oft-db' folder, run the training script:
 ./train_dreambooth_oft.sh
 ```
 
+### Toy experiment: 
+
+<div align="center">
+  <img src="assets/toy_exp.png" width="300"/>
+</div>
+
+1. A toy experiment to demonstrate the importance of angular information. Train a simple convolutional autoencoder on some dataset, as an example, the author trained one on the [102flowers](https://www.robots.ox.ac.uk/~vgg/data/flowers/102/) dataset:
+
+```bash
+python examples/toy_exp_ae.py
+```
+
 
 ## Citing our work
 ```bibtex
