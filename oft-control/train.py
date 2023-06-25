@@ -28,13 +28,14 @@ parser.add_argument('--r', type=int, default=4)
 parser.add_argument('--eps', type=float, default=1e-5)
 parser.add_argument('--coft', action="store_true")
 parser.add_argument('--block_share', action="store_true", default=False)
+parser.add_argument('--control', type=str, help='control signal. Options are [segm, sketch, densepose, depth, canny]', default="densepose")
 
 args = parser.parse_args()
 
 
 if __name__ == "__main__":
     # specify the control signal and dataset
-    control = 'densepose' # segm, sketch, densepose, depth, canny, canny1k, canny5k, canny20k, canny50k
+    control = args.control
 
     # create dataset
     train_dataset, val_dataset, data_name, logger_freq, max_epochs = return_dataset(control) # , n_samples=n_samples)
@@ -50,8 +51,6 @@ if __name__ == "__main__":
     only_mid_control = False
     num_gpus = torch.cuda.device_count()
     experiment = 'oft_{}_{}_eps_{}_pe_diff_mlp_r_{}_{}gpu'.format(data_name, control, args.eps, args.r, num_gpus)
-    print(experiment)
-    sys.exit()
 
     # First use cpu to load models. Pytorch Lightning will automatically move it to GPUs.
     model = create_model('./configs/oft_ldm_v15.yaml').cpu()
@@ -59,8 +58,6 @@ if __name__ == "__main__":
     
     # inject trainable oft parameters
     unet_lora_params, train_names = inject_trainable_oft(model.model, r=args.r, eps=args.eps, is_coft=args.coft, block_share=args.block_share)
-    # unet_lora_params, train_names = inject_trainable_oft_conv(model.model, r=args.r, eps=args.eps, is_coft=args.coft, block_share=args.block_share)
-    # unet_lora_params, train_names = inject_trainable_oft_extended(model.model, r=args.r, eps=args.eps, is_coft=args.coft, block_share=args.block_share)
     
     model.load_state_dict(load_state_dict(resume_path, location='cpu'))
     model.learning_rate = learning_rate

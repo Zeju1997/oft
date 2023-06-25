@@ -28,13 +28,14 @@ parser.add_argument('--r', type=int, default=4)
 parser.add_argument('--eps', type=float, default=1e-5)
 parser.add_argument('--coft', action="store_true")
 parser.add_argument('--block_share', action="store_true", default=False)
+parser.add_argument('--control', type=str, help='control signal. Options are [segm, sketch, densepose, depth, canny]', default="densepose")
 
 args = parser.parse_args()
 
 
 if __name__ == "__main__":
     # control signal
-    control = 'segm' # segm, sketch, densepose, depth, canny, canny1k, canny5k, canny20k, canny50k
+    control = args.control
 
     # create dataset
     train_dataset, val_dataset, data_name, logger_freq, max_epochs = return_dataset(control)
@@ -54,11 +55,8 @@ if __name__ == "__main__":
 
     resume_path = os.path.join(experiment, f'model-epoch={epoch:02d}.ckpt')
 
-    # epoch = 15
-    # resume_from_checkpoint_path = os.path.join('log/image_log_'+experiment, f'model-epoch={epoch:02d}.ckpt')
-
     # First use cpu to load models. Pytorch Lightning will automatically move it to GPUs.
-    model = create_model('./models/opt_lora_ldm_v15.yaml').cpu()
+    model = create_model('./configs/oft_ldm_v15.yaml').cpu()
     model.model.requires_grad_(False)
 
     unet_opt_params, train_names = inject_trainable_oft_with_norm(model.model, r=args.r, eps=args.eps, is_coft=args.coft, block_share=args.block_share)

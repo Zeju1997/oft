@@ -122,9 +122,10 @@ python oft-control/tool_add_control_oft.py \
   --r=4 \
   --coft
 ```
-2. Specify the control signal and dataset. Train the model specify the same hyperparameters as above:
+2. Specify the control signal from [segm, sketch, densepose, depth, canny]. Train the model with specifying the same hyperparameters as above:
 ```bash
 python oft-control/train.py \
+  --densepose \
   --eps=1e-3 \
   --r=4 \
   --coft
