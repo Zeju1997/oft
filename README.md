@@ -93,7 +93,7 @@ conda env create -f environment.yml
 
 3. Install [diffusers](https://github.com/huggingface/diffusers)
 ```bash
-pip install –upgrade diffusers[torch]
+pip install --upgrade diffusers[torch]
 ```
 
 ## Usage
