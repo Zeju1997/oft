@@ -234,7 +234,9 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     model = AutoEncoder().to(device)
-    model.load_state_dict(torch.load(model_path))
+    
+    if os.path.exists(model_path):
+        model.load_state_dict(torch.load(model_path))
 
     # Apply the transformation to the dataset
     # dataset = load_dataset("lambdalabs/pokemon-blip-captions", split="train")
