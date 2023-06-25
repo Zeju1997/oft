@@ -27,10 +27,10 @@ We are working on adding in more applications and new OFT variants. Stay tuned!
 
 
 ## TODO
-We expect the first version of our code will be released on 23rd June. Thanks!
+
 - [x] Code for running controllable generation (ControlNet-like tasks)
 - [x] Code for running subject-driven generation (Dreambooth-like tasks)
-- [ ] Refine readme
+- [x] Refine readme
 - [ ] Fast version of OFT
 - [ ] More examplar applications
 
@@ -93,7 +93,7 @@ conda env create -f environment.yml
 
 3. Install [diffusers](https://github.com/huggingface/diffusers)
 ```bash
-pip install –upgrade diffusers[torch]
+pip install --upgrade diffusers[torch]
 ```
 
 ## Usage
