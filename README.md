@@ -125,14 +125,18 @@ python oft-control/tool_add_control_oft.py \
 2. Specify the control signal from [segm, sketch, densepose, depth, canny]. Train the model with specifying the same hyperparameters as above:
 ```bash
 python oft-control/train.py \
-  --densepose \
+  --control=densepose \
   --eps=1e-3 \
   --r=4 \
   --coft
 ```
 3. Because **OFT** does not affect the neuron norm, the neuron magnitude might be sub-optimal. Run the following script for performing magnitude post-stage fitting after training an oft to improve on the magnitude.
 ```bash
-python oft-control/train_with_norm.py 
+python oft-control/train_with_norm.py \
+  --control=densepose \
+  --eps=1e-3 \
+  --r=4 \
+  --coft
 ```
 4. After finetuning with **OFT**, run inference to generate images based on control signal. Because the inference takes some time, to perform large scale evaluation, we split the dataset into different sub-datasets and run inference on multiple gpus:
 ```bash
