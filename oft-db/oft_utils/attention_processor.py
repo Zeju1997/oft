@@ -411,11 +411,11 @@ def project_batch(R, eps=1e-5):
 
 
 class OFTLinearLayer(nn.Module):
-    def __init__(self, in_features, out_features, bias=False, dim=3, eps=5e-6, rank=4, is_coft=False):
+    def __init__(self, in_features, out_features, bias=False, dim=3, eps=5e-6, r=4, is_coft=False):
         super(OFTLinearLayer, self).__init__()
 
         # Define the reduction rate:
-        self.r = rank
+        self.r = r
         
         # Check whether to use the constrained variant COFT 
         self.is_coft = is_coft
@@ -540,18 +540,18 @@ class OFTLinearLayer(nn.Module):
 
 
 class OFTAttnProcessor(nn.Module):
-    def __init__(self, hidden_size, cross_attention_dim=None, eps=2e-5, rank=4, is_coft=False):
+    def __init__(self, hidden_size, cross_attention_dim=None, eps=2e-5, r=4, is_coft=False):
         super().__init__()
 
         self.hidden_size = hidden_size
         self.cross_attention_dim = cross_attention_dim
-        self.rank = rank
+        self.r = r
         self.is_coft = is_coft
         
-        self.to_q_oft = OFTLinearLayer(hidden_size, hidden_size, eps=eps, rank=rank, is_coft=is_coft)
-        self.to_k_oft = OFTLinearLayer(cross_attention_dim or hidden_size, hidden_size, eps=eps, rank=rank, is_coft=is_coft)
-        self.to_v_oft = OFTLinearLayer(cross_attention_dim or hidden_size, hidden_size, eps=eps, rank=rank, is_coft=is_coft)
-        self.to_out_oft = OFTLinearLayer(hidden_size, hidden_size, eps=eps, rank=rank, is_coft=is_coft)
+        self.to_q_oft = OFTLinearLayer(hidden_size, hidden_size, eps=eps, r=r, is_coft=is_coft)
+        self.to_k_oft = OFTLinearLayer(cross_attention_dim or hidden_size, hidden_size, eps=eps, r=r, is_coft=is_coft)
+        self.to_v_oft = OFTLinearLayer(cross_attention_dim or hidden_size, hidden_size, eps=eps, r=r, is_coft=is_coft)
+        self.to_out_oft = OFTLinearLayer(hidden_size, hidden_size, eps=eps, r=r, is_coft=is_coft)
 
     def __call__(self, attn: Attention, hidden_states, encoder_hidden_states=None, attention_mask=None, scale=1.0):
         batch_size, sequence_length, _ = (
