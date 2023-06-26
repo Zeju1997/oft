@@ -93,4 +93,8 @@ if __name__ == "__main__":
     )
 
     # Train!
-    trainer.fit(model, train_dataloader)
+    last_model_path = 'log/image_log_' + experiment + '/last.ckpt'
+    if os.path.exists(last_model_path):
+        trainer.fit(model, train_dataloader, ckpt_path=last_model_path)
+    else:
+        trainer.fit(model, train_dataloader)
