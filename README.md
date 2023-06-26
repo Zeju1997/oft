@@ -182,7 +182,7 @@ Within the 'oft-db' folder, run the training script to run the result on the [dr
 ```bash
 ./train_dreambooth_oft.sh $i
 ```
-
+2. Similar to the example for dreamfusion, yo
 ### Toy experiment: 
 
 <div align="center">
