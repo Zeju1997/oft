@@ -501,7 +501,7 @@ if __name__ == "__main__":
     else:
         name = image_dir
 
-    filename = "results_ablation.txt"  # the name of the file to save the value to
+    filename = "results_evaluation.txt"  # the name of the file to save the value to
     # Check if file already exists
     file_exists = os.path.isfile(filename)
 

@@ -411,7 +411,7 @@ def project_batch(R, eps=1e-5):
 
 
 class OFTLinearLayer(nn.Module):
-    def __init__(self, in_features, out_features, bias=False, dim=3, eps=5e-6, r=4, is_coft=False):
+    def __init__(self, in_features, out_features, bias=False, block_share=False, eps=5e-6, r=4, is_coft=False):
         super(OFTLinearLayer, self).__init__()
 
         # Define the reduction rate:
@@ -439,9 +439,9 @@ class OFTLinearLayer(nn.Module):
         #self.filt_shape = [in_features, in_features]
         self.fix_filt_shape = [in_features, out_features]
 
+        self.block_share = block_share
         # Define the trainable matrix parameter: R
-        self.dim = dim
-        if self.dim == 2:
+        if self.block_share:
             # Initialized as an identity matrix
             self.R_shape = [in_features // self.r, in_features // self.r]
             self.R = nn.Parameter(torch.zeros(self.R_shape[0], self.R_shape[0]), requires_grad=True)
@@ -459,7 +459,7 @@ class OFTLinearLayer(nn.Module):
         orig_dtype = x.dtype
         dtype = self.R.dtype
 
-        if self.dim == 2:
+        if self.block_share:
             if self.is_coft:
                 with torch.no_grad():
                     self.R.copy_(project(self.R, eps=self.eps))
