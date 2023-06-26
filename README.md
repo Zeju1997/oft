@@ -130,7 +130,7 @@ python oft-control/train.py \
   --r=4 \
   --coft
 ```
-3. Because **OFT** does not affect the neuron norm, the neuron magnitude might be sub-optimal. Run the following script for performing magnitude post-stage fitting after training an oft to improve on the magnitude.
+3. Because **OFT** does not affect the neuron norm, the neuron magnitude might be sub-optimal. Run the following script for performing magnitude post-stage fitting after training an (at 20 epoch) oft to improve on the magnitude.
 ```bash
 python oft-control/train_with_norm.py \
   --control=densepose \
