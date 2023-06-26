@@ -129,12 +129,12 @@ def project_batch(R, eps=1e-5):
 
 
 class MHE_OFT(nn.Module):
-    def __init__(self, model, eps=2e-5, rank=4):
+    def __init__(self, model, eps=6e-5, r=4):
         super(MHE_OFT, self).__init__()
         # self.model = copy.deepcopy(model)
         # self.model = self.copy_without_grad(model)
 
-        self.r = rank
+        self.r = r
 
         self.extracted_params = {}
         keys_to_delete = []

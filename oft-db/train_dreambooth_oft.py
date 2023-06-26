@@ -400,10 +400,10 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--rank",
+        "--r",
         type=int,
         help=(
-            "The factor to divide the orthogonal matrix to smaller blocks."
+            "The number of blocks in the orthogonal matrix."
         ),
     )
     parser.add_argument(
@@ -564,7 +564,7 @@ class PromptDataset(Dataset):
 def main(args):
     logging_dir = Path(args.output_dir, args.logging_dir)
 
-    accelerator_project_config = ProjectConfiguration(total_limit=args.checkpoints_total_limit)
+    accelerator_project_config = ProjectConfiguration(project_dir=args.output_dir, logging_dir=logging_dir) # total_limit=args.checkpoints_total_limit)
 
     wandb_init = {
         "wandb": {
@@ -577,7 +577,6 @@ def main(args):
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision=args.mixed_precision,
         log_with=args.report_to,
-        logging_dir=logging_dir,
         project_config=accelerator_project_config,
     )
 
@@ -744,7 +743,7 @@ def main(args):
             block_id = int(name[len("down_blocks.")])
             hidden_size = unet.config.block_out_channels[block_id]
 
-        oft_attn_procs[name] = OFTAttnProcessor(hidden_size=hidden_size, cross_attention_dim=cross_attention_dim, eps=args.eps, rank=args.rank, is_coft=args.coft)
+        oft_attn_procs[name] = OFTAttnProcessor(hidden_size=hidden_size, cross_attention_dim=cross_attention_dim, eps=args.eps, r=args.r, is_coft=args.coft)
 
     unet.set_attn_processor(oft_attn_procs)
     oft_layers = AttnProcsLayers(unet.attn_processors)
@@ -880,11 +879,11 @@ def main(args):
     progress_bar.set_description("Steps")
 
     # calculate the hyperspherical energy fine-tuning
-    mhe = MHE(unet, eps=args.eps, rank=args.rank)
+    mhe = MHE(unet, eps=args.eps, r=args.r)
     mhe_loss = mhe.calculate_mhe()
     accelerator.log({"mhe_loss": mhe_loss}, step=0)
     accelerator.log({"eps": args.eps}, step=0)
-    accelerator.log({"rank": args.rank}, step=0)
+    accelerator.log({"r": args.r}, step=0)
     accelerator.log({"COFT": 1 if args.coft else 0}, step=0)
 
     for epoch in range(first_epoch, args.num_train_epochs):
@@ -975,7 +974,7 @@ def main(args):
                     f" {args.validation_prompt}."
                 )
 
-                mhe = MHE(unet, eps=args.eps, rank=args.rank)
+                mhe = MHE(unet, eps=args.eps, r=args.r)
                 mhe_loss = mhe.calculate_mhe()
                 accelerator.log({"mhe_loss": mhe_loss}, step=global_step)
 

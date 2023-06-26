@@ -14,23 +14,18 @@
 
 Large text-to-image diffusion models have impressive capabilities in generating photorealistic images from text prompts. How to effectively guide or control these powerful models to perform different downstream tasks becomes an important open problem. To tackle this challenge, we introduce a principled finetuning method -- Orthogonal Finetuning (OFT), for adapting text-to-image diffusion models to downstream tasks. Unlike existing methods, OFT can provably preserve hyperspherical energy which characterizes the pairwise neuron relationship on the unit hypersphere. We find that this property is crucial for preserving the semantic generation ability of text-to-image diffusion models. To improve finetuning stability, we further propose Constrained Orthogonal Finetuning (COFT) which imposes an additional radius constraint to the hypersphere. Specifically, we consider two important finetuning text-to-image tasks: subject-driven generation where the goal is to generate subject-specific images given a few images of a subject and a text prompt, and controllable generation where the goal is to enable the model to take in additional control signals. We empirically show that our OFT framework outperforms existing methods in generation quality and convergence speed.
 
-<!-- TABLE OF CONTENTS -->
-***Table of Contents***: - <a href="#controllable-generation">Controllable generation</a> - <a href="#subject-driven-generation">Subject-driven generation</a> - <a href="#toy-experiment">A toy experiment to motivate OFT</a>
-
-
+Stay tuned, more information and code coming soon.
 
 
 ## Update
 - **2023.6.23**: initial commit. Code for running controllable generation (ControlNet-like tasks) and subject-driven generation (Dreambooth-like tasks).
 
-We are working on adding in more applications and new OFT variants. Stay tuned!
-
 
 ## TODO
-
+We expect the first version of our code will be released on 23rd June. Thanks!
 - [x] Code for running controllable generation (ControlNet-like tasks)
 - [x] Code for running subject-driven generation (Dreambooth-like tasks)
-- [x] Refine readme
+- [ ] Refine readme
 - [ ] Fast version of OFT
 - [ ] More examplar applications
 
@@ -91,11 +86,6 @@ git clone https://github.com/Zeju1997/oft.git
 conda env create -f environment.yml
 ```
 
-3. Install [diffusers](https://github.com/huggingface/diffusers)
-```bash
-pip install --upgrade diffusers[torch]
-```
-
 ## Usage
 
 There are only two hyperparameters that one need to adjusted, we noticed that generally with more number of blocks the fine-tuning results become worse. Block sharing is by default false, but might work if the control is very simple.
@@ -122,21 +112,16 @@ python oft-control/tool_add_control_oft.py \
   --r=4 \
   --coft
 ```
-2. Specify the control signal from [segm, sketch, densepose, depth, canny]. Train the model with specifying the same hyperparameters as above:
+2. Specify the control signal and dataset. Train the model specify the same hyperparameters as above:
 ```bash
 python oft-control/train.py \
-  --control=densepose \
   --eps=1e-3 \
   --r=4 \
   --coft
 ```
-3. Because **OFT** does not affect the neuron norm, the neuron magnitude might be sub-optimal. Run the following script for performing magnitude post-stage fitting after training an (at 20 epoch) oft to improve on the magnitude.
+3. Because **OFT** does not affect the neuron norm, the neuron magnitude might be sub-optimal. Run the following script for performing magnitude post-stage fitting after training an oft to improve on the magnitude.
 ```bash
-python oft-control/train_with_norm.py \
-  --control=densepose \
-  --eps=1e-3 \
-  --r=4 \
-  --coft
+python oft-control/train_with_norm.py 
 ```
 4. After finetuning with **OFT**, run inference to generate images based on control signal. Because the inference takes some time, to perform large scale evaluation, we split the dataset into different sub-datasets and run inference on multiple gpus:
 ```bash
@@ -158,9 +143,13 @@ Note, for evaluating the segmentation map-to-image (S2I) task, please install th
 python tools/test.py local_configs/segformer/B4/segformer.b4.512x512.ade.160k.py ./weights/segformer.b4.512x512.ade.160k.pth
 ```
 
+#### 
 
 ### Subject-driven Generation
-1. Similar to the example for dreamfusion, you can run the finetuning using oft with the following command. The three paramters that need to be adjusted are
+1. Similar to the example for dreamfusion, you can run the finetuning using oft with the following command. The three paramters that need to be adjusted are the same as above:
+- Number of blocks: r
+- eps-deviation (only with the constrained variant COFT): eps
+- Block-sharing: block_share
 
 ```bash
 accelerate launch train_dreambooth_oft.py \
@@ -185,16 +174,16 @@ accelerate launch train_dreambooth_oft.py \
   --seed="0" \
   --name="$name" \
   --num_class_images=200 \
-  --eps=$eps \
-  --rank=$rank \
+  --eps=6e-5 \
+  --rank=4 \
   --coft
 ```
-Within the 'oft-db' folder, run the training script:
+Within the 'oft-db' folder, run the training script to run the result on the [dreambooth](https://github.com/google/dreambooth) dataset. [Dreambooth](https://github.com/google/dreambooth) dataset consists of 30 subjects, with 25 validation prompts each ($i: 0-749):
 ```bash
-./train_dreambooth_oft.sh
+./train_dreambooth_oft.sh $i
 ```
 
-### Toy experiment
+### Toy experiment: 
 
 <div align="center">
   <img src="assets/toy_exp.png" width="300"/>
@@ -209,7 +198,7 @@ python examples/toy_exp_ae.py
 
 ## Citing our work
 ```bibtex
-@article{Qiu2023OFT,
+@InProceedings{Qiu2023OFT,
   title={Controlling Text-to-Image Diffusion by Orthogonal Finetuning},
   author={Qiu, Zeju and Liu, Weiyang and Feng, Haiwen and Xue, Yuxuan and Feng, Yao and Liu, Zhen and Zhang, Dan and Weller, Adrian and Schölkopf, Bernhard},
   journal={arXiv preprint arXiv:2306.07280},
