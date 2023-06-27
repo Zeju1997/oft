@@ -409,9 +409,10 @@ def parse_args(input_args=None):
     parser.add_argument(
         "--coft",
         action='store_true',
+        default=False,
         help=(
             "The constrainted variant of OFT."
-        ),
+        )
     )
     if input_args is not None:
         args = parser.parse_args(input_args)

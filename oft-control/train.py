@@ -26,7 +26,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--r', type=int, default=4)
 parser.add_argument('--eps', type=float, default=1e-5)
-parser.add_argument('--coft', action="store_true")
+parser.add_argument('--coft', action="store_true", default=False)
 parser.add_argument('--block_share', action="store_true", default=False)
 parser.add_argument('--control', type=str, help='control signal. Options are [segm, sketch, densepose, depth, canny]', default="densepose")
 

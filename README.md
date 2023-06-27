@@ -146,43 +146,20 @@ python tools/test.py local_configs/segformer/B4/segformer.b4.512x512.ade.160k.py
 #### 
 
 ### Subject-driven Generation
-1. Similar to the example for dreamfusion, you can run the finetuning using oft with the following command. The three paramters that need to be adjusted are the same as above:
+1. Similar to the example for [diffusers-dreambooth](https://github.com/huggingface/diffusers/tree/main/examples/dreambooth), you can run the finetuning using oft with the following command. The three paramters that need to be adjusted are the same as above:
 - Number of blocks: r
 - eps-deviation (only with the constrained variant COFT): eps
 - Block-sharing: block_share
-
-```bash
-accelerate launch train_dreambooth_oft.py \
-  --pretrained_model_name_or_path=$MODEL_NAME  \
-  --instance_data_dir=$INSTANCE_DIR \
-  --class_data_dir="$CLASS_DIR" \
-  --output_dir="$OUTPUT_DIR" \
-  --instance_prompt="$instance_prompt" \
-  --with_prior_preservation --prior_loss_weight=1.0 \
-  --class_prompt="$class_prompt" \
-  --resolution=512 \
-  --train_batch_size=1 \
-  --gradient_accumulation_steps=1 \
-  --checkpointing_steps=5000 \
-  --learning_rate=5e-5 \
-  --report_to="wandb" \
-  --lr_scheduler="constant" \
-  --lr_warmup_steps=0 \
-  --max_train_steps=3005 \
-  --validation_prompt="$validation_prompt" \
-  --validation_epochs=1 \
-  --seed="0" \
-  --name="$name" \
-  --num_class_images=200 \
-  --eps=6e-5 \
-  --rank=4 \
-  --coft
-```
 Within the 'oft-db' folder, run the training script to run the result on the [dreambooth](https://github.com/google/dreambooth) dataset. [Dreambooth](https://github.com/google/dreambooth) dataset consists of 30 subjects, with 25 validation prompts each ($i: 0-749):
 ```bash
 ./train_dreambooth_oft.sh $i
 ```
-2. Similar to the example for dreamfusion, yo
+
+2. We also provide the evaluation scripts:
+```bash
+python eval_ablation.py
+```
+
 ### Toy experiment: 
 
 <div align="center">
