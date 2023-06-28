@@ -512,7 +512,7 @@ class OFTLinearLayer(nn.Module):
         return Q
 
     def block_diagonal(self, R):
-        if self.dim == 2:
+        if len(R.shape) == 2:
             # Create a list of R repeated block_count times
             blocks = [R] * self.r
         else:
