@@ -33,14 +33,15 @@ We expect the first version of our code will be released on 23rd June. Thanks!
 ## Getting Started
 
 ### Downloading Data
-
-1. Run the scripts in the 'scripts' folder to automatically download the preprocessed data required for `oft-control`, e.g., for running the densepose-to-image experiment, run the script:
+Run the scripts in the 'scripts' folder to automatically download the preprocessed data required for `oft-control` or `oft-db`. 
+* `oft-control` for Controllable Generation: e.g., for running the densepose-to-image experiment, run the script:
 ```bash
 bash scripts/dataset_setup_control_deepfashion.sh
 ```
-
-2. Download and store the [dreambooth](https://github.com/google/dreambooth) dataset within `data/dreambooth` to run `oft-db`.
-
+* `oft-db` for Subject-driven Generation: download and store the [dreambooth](https://github.com/google/dreambooth), run: 
+```bash
+bash scripts/dataset_setup_db_dreambooth.sh
+```
 After downloading and placing the data, your directory structure should look like this:
 ```
 data
