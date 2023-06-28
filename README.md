@@ -152,6 +152,7 @@ python tools/test.py local_configs/segformer/B4/segformer.b4.512x512.ade.160k.py
 - Block-sharing: block_share
 Within the 'oft-db' folder, run the training script to run the result on the [dreambooth](https://github.com/google/dreambooth) dataset. [Dreambooth](https://github.com/google/dreambooth) dataset consists of 30 subjects, with 25 validation prompts each ($i: 0-749):
 ```bash
+cd oft-db
 ./train_dreambooth_oft.sh $i
 ```
 
