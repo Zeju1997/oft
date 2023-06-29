@@ -32,6 +32,10 @@ We expect the first version of our code will be released on 23rd June. Thanks!
 
 ## Getting Started
 
+<div align="center">
+  <img src="assets/result_control.png" width="500"/>
+</div>
+
 ### Downloading Data
 
 Run the scripts in the 'scripts' folder to automatically download the preprocessed data required for `oft-control` or `oft-db`. 
