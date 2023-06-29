@@ -35,6 +35,9 @@ We expect the first version of our code will be released on 23rd June. Thanks!
 <div align="center">
   <img src="assets/result_control.png" width="500"/>
 </div>
+<div align="center">
+  <img src="assets/result_control_2.png" width="500"/>
+</div>
 
 ### Downloading Data
 
