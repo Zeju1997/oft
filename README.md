@@ -33,7 +33,10 @@ We expect the first version of our code will be released on 23rd June. Thanks!
 ## Getting Started
 
 ### Downloading Data
+
 Run the scripts in the 'scripts' folder to automatically download the preprocessed data required for `oft-control` or `oft-db`. 
+
+**Note:** When using the downloading script, it is necessary to agree to the terms of their licenses and properly cite them in your work.
 * `oft-control` for Controllable Generation: e.g., for running the densepose-to-image experiment, run the script:
 ```bash
 bash scripts/dataset_setup_control_deepfashion.sh
