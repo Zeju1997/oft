@@ -28,4 +28,5 @@ dependencies:
     - torchmetrics[image]
     - face-alignment==1.3.4
     - diffusers==0.17.1
+    - accelerate
 
