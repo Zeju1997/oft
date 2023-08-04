@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Fine-tuning script for Stable Diffusion for text2image with support for LoRA."""
+"""Fine-tuning script for Stable Diffusion for text2image with support for OFT."""
 
 import argparse
 import logging
@@ -39,9 +39,10 @@ from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
 
 import diffusers
-from diffusers import AutoencoderKL, DDPMScheduler, DiffusionPipeline, UNet2DConditionModel
-from diffusers.loaders import AttnProcsLayers
-from diffusers.models.attention_processor import LoRAAttnProcessor
+from diffusers import AutoencoderKL, DDPMScheduler, DiffusionPipeline
+from oft_utils.attention_processor import UNet2DConditionModel
+from oft_utils.loaders import AttnProcsLayers
+from oft_utils.attention_processor import OFTAttnProcessor
 from diffusers.optimization import get_scheduler
 from diffusers.utils import check_min_version, is_wandb_available
 from diffusers.utils.import_utils import is_xformers_available
@@ -73,8 +74,8 @@ inference: true
 ---
     """
     model_card = f"""
-# LoRA text2image fine-tuning - {repo_id}
-These are LoRA adaption weights for {base_model}. The weights were fine-tuned on the {dataset_name} dataset. You can find some example images in the following. \n
+# OFT text2image fine-tuning - {repo_id}
+These are OFT adaption weights for {base_model}. The weights were fine-tuned on the {dataset_name} dataset. You can find some example images in the following. \n
 {img_str}
 """
     with open(os.path.join(repo_folder, "README.md"), "w") as f:
@@ -162,7 +163,7 @@ def parse_args():
     parser.add_argument(
         "--output_dir",
         type=str,
-        default="sd-model-finetuned-lora",
+        default="sd-model-finetuned-oft",
         help="The output directory where the model predictions and checkpoints will be written.",
     )
     parser.add_argument(
@@ -344,10 +345,26 @@ def parse_args():
     )
     parser.add_argument("--noise_offset", type=float, default=0, help="The scale of noise offset.")
     parser.add_argument(
-        "--rank",
+        "--eps",
+        type=float,
+        help=(
+            "The control strength of COFT. The freedom of rotation. Only has an effect if args.coft is set to True."
+        ),
+    )
+    parser.add_argument(
+        "--r",
         type=int,
-        default=4,
-        help=("The dimension of the LoRA update matrices."),
+        help=(
+            "The number of blocks in the orthogonal matrix."
+        ),
+    )
+    parser.add_argument(
+        "--coft",
+        action='store_true',
+        default=False,
+        help=(
+            "The constrainted variant of OFT."
+        )
     )
 
     args = parser.parse_args()
@@ -362,13 +379,11 @@ def parse_args():
     return args
 
 
-DATASET_NAME_MAPPING = {
-    "lambdalabs/pokemon-blip-captions": ("image", "text"),
-}
-
-
 def main():
     args = parse_args()
+    DATASET_NAME_MAPPING = {
+        args.dataset_name: ("image", "text"),
+    }
     logging_dir = Path(args.output_dir, args.logging_dir)
 
     accelerator_project_config = ProjectConfiguration(project_dir=args.output_dir, logging_dir=logging_dir)
@@ -431,7 +446,7 @@ def main():
 
     text_encoder.requires_grad_(False)
 
-    # For mixed precision training we cast all non-trainable weigths (vae, non-lora text_encoder and non-lora unet) to half-precision
+    # For mixed precision training we cast all non-trainable weigths (vae, non-oft text_encoder and non-oft unet) to half-precision
     # as these weights are only used for inference, keeping weights in full precision is not required.
     weight_dtype = torch.float32
     if accelerator.mixed_precision == "fp16":
@@ -444,7 +459,7 @@ def main():
     vae.to(accelerator.device, dtype=weight_dtype)
     text_encoder.to(accelerator.device, dtype=weight_dtype)
 
-    # now we will add new LoRA weights to the attention layers
+    # now we will add new OFT weights to the attention layers
     # It's important to realize here how many attention weights will be added and of which sizes
     # The sizes of the attention layers consist only of two different variables:
     # 1) - the "hidden_size", which is increased according to `unet.config.block_out_channels`.
@@ -457,8 +472,8 @@ def main():
     # - up blocks (2x attention layers) * (3x transformer layers) * (3x down blocks) = 18
     # => 32 layers
 
-    # Set correct lora layers
-    lora_attn_procs = {}
+    # Set correct oft layers
+    oft_attn_procs = {}
     for name in unet.attn_processors.keys():
         cross_attention_dim = None if name.endswith("attn1.processor") else unet.config.cross_attention_dim
         if name.startswith("mid_block"):
@@ -470,13 +485,15 @@ def main():
             block_id = int(name[len("down_blocks.")])
             hidden_size = unet.config.block_out_channels[block_id]
 
-        lora_attn_procs[name] = LoRAAttnProcessor(
+        oft_attn_procs[name] = OFTAttnProcessor(
             hidden_size=hidden_size,
             cross_attention_dim=cross_attention_dim,
-            rank=args.rank,
+            eps=args.eps,
+            r=args.r,
+            coft=args.is_coft,
         )
 
-    unet.set_attn_processor(lora_attn_procs)
+    unet.set_attn_processor(oft_attn_procs)
 
     if args.enable_xformers_memory_efficient_attention:
         if is_xformers_available():
@@ -515,7 +532,7 @@ def main():
         snr = (alpha / sigma) ** 2
         return snr
 
-    lora_layers = AttnProcsLayers(unet.attn_processors)
+    oft_layers = AttnProcsLayers(unet.attn_processors)
 
     # Enable TF32 for faster training on Ampere GPUs,
     # cf https://pytorch.org/docs/stable/notes/cuda.html#tensorfloat-32-tf32-on-ampere-devices
@@ -541,7 +558,7 @@ def main():
         optimizer_cls = torch.optim.AdamW
 
     optimizer = optimizer_cls(
-        lora_layers.parameters(),
+        oft_layers.parameters(),
         lr=args.learning_rate,
         betas=(args.adam_beta1, args.adam_beta2),
         weight_decay=args.adam_weight_decay,
@@ -667,8 +684,8 @@ def main():
     )
 
     # Prepare everything with our `accelerator`.
-    lora_layers, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
-        lora_layers, optimizer, train_dataloader, lr_scheduler
+    oft_layers, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
+        oft_layers, optimizer, train_dataloader, lr_scheduler
     )
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
@@ -799,7 +816,7 @@ def main():
                 # Backpropagate
                 accelerator.backward(loss)
                 if accelerator.sync_gradients:
-                    params_to_clip = lora_layers.parameters()
+                    params_to_clip = oft_layers.parameters()
                     accelerator.clip_grad_norm_(params_to_clip, args.max_grad_norm)
                 optimizer.step()
                 lr_scheduler.step()
@@ -837,6 +854,26 @@ def main():
                         save_path = os.path.join(args.output_dir, f"checkpoint-{global_step}")
                         accelerator.save_state(save_path)
                         logger.info(f"Saved state to {save_path}")
+
+                        # Save the oft layers
+                        accelerator.wait_for_everyone()
+                        # unet = unet.to(torch.float32)
+                        unet.save_attn_procs(save_path)
+
+                        if args.push_to_hub:
+                            save_model_card(
+                                repo_id,
+                                images=images,
+                                base_model=args.pretrained_model_name_or_path,
+                                dataset_name=args.dataset_name,
+                                repo_folder=args.output_dir,
+                            )
+                            upload_folder(
+                                repo_id=repo_id,
+                                folder_path=args.output_dir,
+                                commit_message="End of training",
+                                ignore_patterns=["step_*", "epoch_*"],
+                            )
 
             logs = {"step_loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
             progress_bar.set_postfix(**logs)
@@ -887,7 +924,7 @@ def main():
                 del pipeline
                 torch.cuda.empty_cache()
 
-    # Save the lora layers
+    # Save the oft layers
     accelerator.wait_for_everyone()
     if accelerator.is_main_process:
         unet = unet.to(torch.float32)
@@ -913,6 +950,10 @@ def main():
     pipeline = DiffusionPipeline.from_pretrained(
         args.pretrained_model_name_or_path, revision=args.revision # , torch_dtype=weight_dtype
     )
+    pipeline.unet = UNet2DConditionModel.from_pretrained(
+        args.pretrained_model_name_or_path, subfolder="unet", revision=args.revision
+    )
+    
     pipeline = pipeline.to(accelerator.device)
 
     # load attention processors
