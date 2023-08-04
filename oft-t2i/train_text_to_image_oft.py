@@ -40,7 +40,7 @@ from transformers import CLIPTextModel, CLIPTokenizer
 
 import diffusers
 from diffusers import AutoencoderKL, DDPMScheduler, DiffusionPipeline
-from oft_utils.attention_processor import UNet2DConditionModel
+from oft_utils.unet_2d_condition import UNet2DConditionModel
 from oft_utils.loaders import AttnProcsLayers
 from oft_utils.attention_processor import OFTAttnProcessor
 from diffusers.optimization import get_scheduler
@@ -490,7 +490,7 @@ def main():
             cross_attention_dim=cross_attention_dim,
             eps=args.eps,
             r=args.r,
-            coft=args.is_coft,
+            is_coft=args.coft,
         )
 
     unet.set_attn_processor(oft_attn_procs)
@@ -698,7 +698,7 @@ def main():
     # We need to initialize the trackers we use, and also store our configuration.
     # The trackers initializes automatically on the main process.
     if accelerator.is_main_process:
-        accelerator.init_trackers("text2image-fine-tune-lora", config=vars(args))
+        accelerator.init_trackers("text2image-fine-tune-oft", config=vars(args))
 
     # Train!
     total_batch_size = args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps
@@ -953,7 +953,7 @@ def main():
     pipeline.unet = UNet2DConditionModel.from_pretrained(
         args.pretrained_model_name_or_path, subfolder="unet", revision=args.revision
     )
-    
+
     pipeline = pipeline.to(accelerator.device)
 
     # load attention processors
