@@ -1,0 +1,9 @@
+# data
+/data
+
+# log files
+/sd-pokemon-model
+/sddata
+/wandb
+
+*.png
