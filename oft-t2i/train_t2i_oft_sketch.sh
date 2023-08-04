@@ -15,14 +15,14 @@ accelerate launch --mixed_precision="fp16"  train_text_to_image_oft.py \
   --resolution=512 --center_crop --random_flip \
   --train_batch_size=1 \
   --gradient_accumulation_steps=4 \
-  --max_train_steps=15 \
+  --max_train_steps=50000 \
   --learning_rate=1e-04 \
   --max_grad_norm=1 \
   --lr_scheduler="cosine" --lr_warmup_steps=0 \
   --output_dir=${OUTPUT_DIR} \
   --hub_model_id=${HUB_MODEL_ID} \
   --report_to=wandb \
-  --checkpointing_steps=5 \
+  --checkpointing_steps=5000 \
   --validation_prompt="giraffe is eating leaves from the tree" \
   --seed=1337 \
   --eps=6e-5 \
