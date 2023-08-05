@@ -1,7 +1,7 @@
 import os
 import torch
 from tqdm import tqdm
-from diffusers import StableDiffusionPipeline
+from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 
 import json
 from torch.utils.data import Dataset, DataLoader
@@ -40,7 +40,12 @@ caption_loader = DataLoader(coco_captions, batch_size=batch_size, shuffle=False)
 num_samples = 1
 
 model_path = "./sddata/finetune/sd/coco/checkpoint-30000"
-pipe = StableDiffusionPipeline.from_pretrained(model_path, torch_dtype=torch.float16)
+pipe = StableDiffusionPipeline.from_pretrained(
+    model_path, 
+    torch_dtype=torch.float16,
+    safety_checker = None,
+    requires_safety_checker = False)
+pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
 pipe.to("cuda")
 
 captions_data = []
@@ -60,8 +65,8 @@ for idx, caption in enumerate(caption_loader):
     image_path = os.path.join(output_folder, "sample_{}.png".format(str(idx)))
     image.save(image_path)
 
-    # if idx > 100:
-    #     break
+    if idx >= 1999:
+        break
 
 json_file = os.path.join(output_folder, 'captions.json')
 # Write to JSON file

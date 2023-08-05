@@ -6,6 +6,7 @@
 /sddata
 /wandb
 /results
+/log
 
 *.png
 *.json

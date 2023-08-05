@@ -1,0 +1,14 @@
+executable = ./test_text_to_image_oft.sh
+arguments = $(idx)
+error = ./log/test.$(Process).err
+output = ./log/test.$(Process).out
+log = ./log/test.$(Process).log
+request_memory = 128000
+request_cpus = 2
+request_gpus = 1 
+request_memory = 128000 
+requirements = TARGET.CUDAGlobalMemoryMb  > 30000
+
+queue 1 idx from seq 0 19 |
+# queue 1 idx in 4
+

@@ -35,16 +35,20 @@ class CocoCaptions(Dataset):
 
 model_base = "runwayml/stable-diffusion-v1-5"
 
-pipe = StableDiffusionPipeline.from_pretrained(model_base, torch_dtype=torch.float16)
+pipe = StableDiffusionPipeline.from_pretrained(
+    model_base,
+    torch_dtype=torch.float16,
+    safety_checker = None,
+    requires_safety_checker = False)
 pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
 
-lora_model_path = "./sddata/finetune/lora/coco/checkpoint-30000"
+lora_model_path = "./sddata/finetune/lora/coco/checkpoint-20000"
 pipe.unet.load_attn_procs(lora_model_path)
 pipe.to("cuda")
 
 captions_file = 'captions_val2017.json' # Replace with the correct path
 coco_captions = CocoCaptions(captions_file)
-output_folder = os.path.join(os.getcwd(), 'results', 'lora-30000')
+output_folder = os.path.join(os.getcwd(), 'results', 'lora-20000')
 
 batch_size = 1
 caption_loader = DataLoader(coco_captions, batch_size=batch_size, shuffle=False)
@@ -65,8 +69,8 @@ for idx, caption in enumerate(caption_loader):
     image_path = os.path.join(output_folder, "sample_{}.png".format(str(idx)))
     image.save(image_path)
 
-    # if idx > 5:
-    #    break
+    # if idx >= 1999:
+    #     break
 
 json_file = os.path.join(output_folder, 'captions.json')
 # Write to JSON file
