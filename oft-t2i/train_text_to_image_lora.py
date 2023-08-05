@@ -838,6 +838,26 @@ def main():
                         accelerator.save_state(save_path)
                         logger.info(f"Saved state to {save_path}")
 
+                        # Save the lora layers
+                        accelerator.wait_for_everyone()
+                        # unet = unet.to(torch.float32)
+                        unet.save_attn_procs(save_path)
+
+                        if args.push_to_hub:
+                            save_model_card(
+                                repo_id,
+                                images=images,
+                                base_model=args.pretrained_model_name_or_path,
+                                dataset_name=args.dataset_name,
+                                repo_folder=args.output_dir,
+                            )
+                            upload_folder(
+                                repo_id=repo_id,
+                                folder_path=args.output_dir,
+                                commit_message="End of training",
+                                ignore_patterns=["step_*", "epoch_*"],
+                            )
+
             logs = {"step_loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
             progress_bar.set_postfix(**logs)
 
@@ -907,6 +927,7 @@ def main():
                 commit_message="End of training",
                 ignore_patterns=["step_*", "epoch_*"],
             )
+
 
     # Final inference
     # Load previous pipeline

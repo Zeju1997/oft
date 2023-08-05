@@ -11,7 +11,19 @@ class CocoCaptions(Dataset):
         with open(captions_file, 'r') as f:
             data = json.load(f)
         
-        self.captions = [item['caption'] for item in data['annotations']]
+        captions = [item['caption'] for item in data['annotations']]
+        image_ids = [item['image_id'] for item in data['annotations']]
+
+        # Pairing image_ids and captions and sorting by image_id
+        sorted_data = sorted(zip(image_ids, captions), key=lambda x: x[0])
+
+        # Keep only the first caption for each unique image_id
+        unique_data = {}
+        for image_id, caption in sorted_data:
+            if image_id not in unique_data:
+                unique_data[image_id] = caption
+
+        self.image_ids, self.captions = zip(*unique_data.items())
     
     def __len__(self):
         return len(self.captions)
@@ -21,36 +33,35 @@ class CocoCaptions(Dataset):
 
 captions_file = 'captions_val2017.json' # Replace with the correct path
 coco_captions = CocoCaptions(captions_file)
-output_folder = os.path.join(os.getcwd(), 'results', 'sketch')
+output_folder = os.path.join(os.getcwd(), 'results', 'sd-30000')
 
 batch_size = 1
-caption_loader = DataLoader(coco_captions, batch_size=batch_size, shuffle=True)
-num_samples = 8
+caption_loader = DataLoader(coco_captions, batch_size=batch_size, shuffle=False)
+num_samples = 1
 
-model_path = "./sddata/finetune/sd/coco/checkpoint-5"
+model_path = "./sddata/finetune/sd/coco/checkpoint-30000"
 pipe = StableDiffusionPipeline.from_pretrained(model_path, torch_dtype=torch.float16)
 pipe.to("cuda")
 
 captions_data = []
 for idx, caption in enumerate(caption_loader):
-    print('[Sample Idx]', idx)
+    print('[Sample Idx {}/{}]'.format(idx, len(coco_captions)))
     caption_entry = {"idx": idx, "caption": caption}
     captions_data.append(caption_entry)
 
-    for i in range(num_samples):
-        # use half the weights from the LoRA finetuned model and half the weights from the base model
-        # image = pipe("giraffe is eating leaves from the tree", num_inference_steps=25, guidance_scale=7.5, cross_attention_kwargs={"scale": 0.5}).images[0]
+    # use half the weights from the LoRA finetuned model and half the weights from the base model
+    # image = pipe("giraffe is eating leaves from the tree", num_inference_steps=25, guidance_scale=7.5, cross_attention_kwargs={"scale": 0.5}).images[0]
 
-        # use the weights from the fully finetuned LoRA model
-        # image = pipe(caption, num_inference_steps=25, guidance_scale=7.5).images[0]
+    # use the weights from the fully finetuned LoRA model
+    # image = pipe(caption, num_inference_steps=25, guidance_scale=7.5).images[0]
 
-        image = pipe(prompt="yoda").images[0]
+    image = pipe(prompt=caption, num_inference_steps=25, guidance_scale=7.5).images[0]
 
-        image_path = os.path.join(output_folder, "sample_{}_{}.png".format(str(idx), str(i)))
-        image.save(image_path)
+    image_path = os.path.join(output_folder, "sample_{}.png".format(str(idx)))
+    image.save(image_path)
 
-    if idx > 100:
-        break
+    # if idx > 100:
+    #     break
 
 json_file = os.path.join(output_folder, 'captions.json')
 # Write to JSON file

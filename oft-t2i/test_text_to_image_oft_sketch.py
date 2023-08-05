@@ -38,7 +38,7 @@ pipe.unet = UNet2DConditionModel.from_pretrained(
     model_base, subfolder="unet", torch_dtype=torch.float32
 )
 
-oft_model_path = "./sddata/finetune/oft/sketch/checkpoint-10000"
+oft_model_path = "./sddata/finetune/oft/sketch/checkpoint-20000"
 pipe.unet.load_attn_procs(oft_model_path)
 pipe.to("cuda")
 

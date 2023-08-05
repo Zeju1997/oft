@@ -17,7 +17,7 @@ accelerate launch --mixed_precision="fp16" train_text_to_image.py \
   --max_grad_norm=1 \
   --lr_scheduler="constant" --lr_warmup_steps=0 \
   --output_dir=${OUTPUT_DIR} \
-  --checkpointing_steps=5000 \
+  --checkpointing_steps=10000 \
   --validation_prompt="A beautiful woman taking a picture with her smart phone." \
   --seed=1337 \
 
