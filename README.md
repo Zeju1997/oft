@@ -22,7 +22,7 @@ Stay tuned, more information and code coming soon.
 
 
 ## TODO
-We expect the first version of our code will be released on 23rd June. Thanks!
+
 - [x] Code for running controllable generation (ControlNet-like tasks)
 - [x] Code for running subject-driven generation (Dreambooth-like tasks)
 - [x] Refine readme
