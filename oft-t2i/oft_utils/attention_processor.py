@@ -533,6 +533,7 @@ class OFTLinearLayer(nn.Module):
         identity = torch.eye(tensor.shape[0], device=tensor.device)
         return torch.all(torch.eq(tensor, identity))
 
+
 class OFTLinearLayer_mixed_precision(nn.Module):
     def __init__(self, in_features, out_features, bias=False, block_share=False, eps=5e-6, r=4, is_coft=False):
         super(OFTLinearLayer, self).__init__()
