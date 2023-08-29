@@ -175,7 +175,7 @@ accelerate launch train_dreambooth_oft.py \
   --report_to="wandb" \
   --lr_scheduler="constant" \
   --lr_warmup_steps=0 \
-  --max_train_steps=2005 \
+  --max_train_steps=10005 \
   --validation_prompt="$validation_prompt" \
   --validation_epochs=1 \
   --seed="0" \

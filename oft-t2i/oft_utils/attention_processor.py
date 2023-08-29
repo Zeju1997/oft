@@ -554,10 +554,8 @@ class OFTLinearLayer(nn.Module):
 
         assert in_features % self.r == 0, "in_features must be divisible by r"
 
-        # Get the number of available GPUs
-        # self.num_gpus = torch.cuda.device_count()
-        # Set the device IDs for distributed training
-        # self.device_ids = list(range(self.num_gpus))
+        # Define the scaling factors
+        # self.oft_s = nn.Parameter(torch.ones(out_features, 1))
 
         self.in_features=in_features
         self.out_features=out_features
@@ -596,30 +594,35 @@ class OFTLinearLayer(nn.Module):
         # if self.R.dtype != orig_dtype:
         #     self.R.data = self.R.data.to(orig_dtype)
 
-        if self.block_share:
-            if self.is_coft:
-                with torch.no_grad():
-                    self.R.copy_(project(self.R, eps=self.eps))
-            with amp.autocast(enabled=False): 
-                orth_rotate = self.cayley(self.R)
+        if self.training:
+            if self.block_share:
+                if self.is_coft:
+                    with torch.no_grad():
+                        self.R.copy_(project(self.R, eps=self.eps))
+                with amp.autocast(enabled=False): 
+                    orth_rotate = self.cayley(self.R)
+            else:
+                if self.is_coft:
+                    with torch.no_grad():
+                        self.R.copy_(project_batch(self.R, eps=self.eps))
+                with amp.autocast(enabled=False): 
+                    orth_rotate = self.cayley_batch(self.R)
+            block_diagonal_matrix = self.block_diagonal(orth_rotate)
+            
         else:
-            if self.is_coft:
-                with torch.no_grad():
-                    self.R.copy_(project_batch(self.R, eps=self.eps))
-            with amp.autocast(enabled=False): 
-                orth_rotate = self.cayley_batch(self.R)
+            block_diagonal_matrix = self.block_diagonal(self.R)
 
         with amp.autocast():  # Re-enable autocast for the rest of the code
             # Block-diagonal parametrization
-            block_diagonal_matrix = self.block_diagonal(orth_rotate)
+            # block_diagonal_matrix = self.block_diagonal(orth_rotate)
             
             # fix filter
             fix_filt = attn.weight.data
             fix_filt = torch.transpose(fix_filt, 0, 1)
-            # print('block_diagonal_matrix', block_diagonal_matrix.dtype)
-            # print('fix_filt', fix_filt.dtype)
             filt = torch.mm(block_diagonal_matrix, fix_filt)
             filt = torch.transpose(filt, 0, 1)
+
+            # filt = filt * self.oft_s
     
             # Apply the trainable identity matrix
             bias_term = attn.bias.data if attn.bias is not None else None

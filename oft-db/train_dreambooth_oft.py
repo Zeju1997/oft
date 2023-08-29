@@ -880,9 +880,9 @@ def main(args):
     progress_bar.set_description("Steps")
 
     # calculate the hyperspherical energy fine-tuning
-    mhe = MHE(unet, eps=args.eps, r=args.r)
-    mhe_loss = mhe.calculate_mhe()
-    accelerator.log({"mhe_loss": mhe_loss}, step=0)
+    # mhe = MHE(unet, eps=args.eps, r=args.r)
+    # mhe_loss = mhe.calculate_mhe()
+    # accelerator.log({"mhe_loss": mhe_loss}, step=0)
     accelerator.log({"eps": args.eps}, step=0)
     accelerator.log({"r": args.r}, step=0)
     accelerator.log({"COFT": 1 if args.coft else 0}, step=0)
@@ -975,9 +975,9 @@ def main(args):
                     f" {args.validation_prompt}."
                 )
 
-                mhe = MHE(unet, eps=args.eps, r=args.r)
-                mhe_loss = mhe.calculate_mhe()
-                accelerator.log({"mhe_loss": mhe_loss}, step=global_step)
+                # mhe = MHE(unet, eps=args.eps, r=args.r)
+                # mhe_loss = mhe.calculate_mhe()
+                # accelerator.log({"mhe_loss": mhe_loss}, step=global_step)
 
                 # create pipeline
                 pipeline = DiffusionPipeline.from_pretrained(

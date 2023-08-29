@@ -20,7 +20,6 @@ class CocoCaptions(Dataset):
     
     def __getitem__(self, index):
         return self.captions[index]
-    
 
 class CocoCaptionsBlip(Dataset):
     def __init__(self, json_path):
@@ -40,12 +39,9 @@ if __name__ == '__main__':
 
     captions_file = 'prompt_val_blip.json' 
     coco_captions = CocoCaptionsBlip(captions_file)
-    output_folder = os.path.join(os.getcwd(), 'results', 'sketch-50000')
+    output_folder = os.path.join(os.getcwd(), 'results', 'wikiart-30000')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
-
-    # captions_file = 'captions_val2017.json' # Replace with the correct path
-    # coco_captions = CocoCaptions(captions_file)
 
     batch_size = 1
     caption_loader = DataLoader(coco_captions, batch_size=batch_size, shuffle=True)
@@ -54,18 +50,16 @@ if __name__ == '__main__':
     model_base = "runwayml/stable-diffusion-v1-5"
 
     pipe = StableDiffusionPipeline.from_pretrained(
-        model_base, 
-        torch_dtype=torch.float32,
+        model_base, torch_dtype=torch.float32,
         safety_checker = None,
-        requires_safety_checker = False
-    )
+        requires_safety_checker = False)
     pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
 
     pipe.unet = UNet2DConditionModel.from_pretrained(
         model_base, subfolder="unet", torch_dtype=torch.float32
     )
 
-    oft_model_path = "./sddata/finetune/oft/sketch/checkpoint-50000"
+    oft_model_path = "./sddata/finetune/oft/wikiart/checkpoint-30000"
     pipe.unet.load_attn_procs(oft_model_path)
     pipe.to("cuda")
 

@@ -9,6 +9,6 @@ request_gpus = 1
 request_memory = 128000 
 requirements = TARGET.CUDAGlobalMemoryMb  > 30000
 
-queue 1 idx from seq 0 19 |
+queue 1 idx from seq 0 49 |
 # queue 1 idx in 4
 

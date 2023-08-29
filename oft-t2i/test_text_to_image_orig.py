@@ -31,7 +31,7 @@ class CocoCaptions(Dataset):
     
     def __getitem__(self, index):
         return self.captions[index]
-
+    
 
 class CocoCaptionsBlip(Dataset):
     def __init__(self, json_path):
@@ -55,41 +55,34 @@ if __name__ == '__main__':
 
     captions_file = 'prompt_val_blip.json' 
     coco_captions = CocoCaptionsBlip(captions_file)
-    output_folder = os.path.join(os.getcwd(), 'results', 'lora-50000')
+    
+    output_folder = os.path.join(os.getcwd(), 'results', 'sd-orig')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
-
-    model_base = "runwayml/stable-diffusion-v1-5"
-
-    pipe = StableDiffusionPipeline.from_pretrained(
-        model_base,
-        torch_dtype=torch.float16,
-        safety_checker = None,
-        requires_safety_checker = False)
-    pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
-
-    lora_model_path = "./sddata/finetune/lora/coco/checkpoint-50000"
-    pipe.unet.load_attn_procs(lora_model_path)
-    pipe.to("cuda")
 
     batch_size = 1
     caption_loader = DataLoader(coco_captions, batch_size=batch_size, shuffle=False)
     num_samples = 1
 
-    pack = range(0, 5000, 500)
-    for index in range(500):
-        start_point = pack[args.img_ID]
-        idx = start_point + index
-        caption = coco_captions[idx]
+    model_path = "runwayml/stable-diffusion-v1-5"
+    pipe = StableDiffusionPipeline.from_pretrained(
+        model_path, 
+        torch_dtype=torch.float16,
+        safety_checker = None,
+        requires_safety_checker = False)
+    pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
+    pipe.to("cuda")
 
-        # use half the weights from the LoRA finetuned model and half the weights from the base model
-        # image = pipe("giraffe is eating leaves from the tree.", num_inference_steps=25, guidance_scale=7.5, cross_attention_kwargs={"scale": 0.5}).images[0]
+    for index in range(5000):
+        print(index)
+        caption = coco_captions[index]
 
-        # use the weights from the fully finetuned LoRA model
-        image = pipe(caption, num_inference_steps=25, guidance_scale=7.5).images[0]
+        image = pipe(prompt=caption, num_inference_steps=25, guidance_scale=7.5).images[0]
 
-        image_path = os.path.join(output_folder, "sample_{}.png".format(str(idx)))
+        image_path = os.path.join(output_folder, "sample_{}.png".format(str(index)))
         image.save(image_path)
 
         # if idx >= 1999:
         #     break
+
+

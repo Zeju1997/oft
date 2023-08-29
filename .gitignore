@@ -5,8 +5,11 @@
 oft-control/log/
 oft-db/data/
 oft-db/log_cot/
+oft-t2i/sddata_orig/
+oft-t2i/sddata/
 lightning_logs/
 log/
+fbd/
 
 # Ignore the 'build' folder
 build/
@@ -21,5 +24,6 @@ build/
 *.pkl
 *.zip
 *.tgz
+*.sub
 
 __pycache__

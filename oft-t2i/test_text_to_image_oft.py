@@ -33,10 +33,31 @@ class CocoCaptions(Dataset):
         return self.captions[index]
     
 
+class CocoCaptionsBlip(Dataset):
+    def __init__(self, json_path):
+        with open(json_path, 'r') as f:
+            self.data = [json.loads(line) for line in f]
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx]['prompt']
+    
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--img_ID', type=int, help='Number of samples')
     args = parser.parse_args()
+
+    # captions_file = 'captions_val2017.json' 
+    # coco_captions = CocoCaptions(captions_file)
+
+    captions_file = 'prompt_val_blip.json' 
+    coco_captions = CocoCaptionsBlip(captions_file)
+    output_folder = os.path.join(os.getcwd(), 'results', 'oft-20000_coco_1e-05')
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
 
     model_base = "runwayml/stable-diffusion-v1-5"
 
@@ -51,13 +72,9 @@ if __name__ == '__main__':
         model_base, subfolder="unet", torch_dtype=torch.float16
     )
 
-    oft_model_path = "./sddata/finetune/oft/coco_1e-04/checkpoint-20000"
+    oft_model_path = "./sddata/finetune/oft/coco_1e-05/checkpoint-20000"
     pipe.unet.load_attn_procs(oft_model_path)
     pipe.to("cuda")
-
-    captions_file = 'captions_val2017.json' # Replace with the correct path
-    coco_captions = CocoCaptions(captions_file)
-    output_folder = os.path.join(os.getcwd(), 'results', 'oft-20000_1e-04')
 
     batch_size = 1
     caption_loader = DataLoader(coco_captions, batch_size=batch_size, shuffle=False)

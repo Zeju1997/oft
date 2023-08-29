@@ -5,6 +5,7 @@ from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 
 import json
 from torch.utils.data import Dataset, DataLoader
+import argparse
 
 class CocoCaptions(Dataset):
     def __init__(self, captions_file):
@@ -30,50 +31,67 @@ class CocoCaptions(Dataset):
     
     def __getitem__(self, index):
         return self.captions[index]
+    
 
-captions_file = 'captions_val2017.json' # Replace with the correct path
-coco_captions = CocoCaptions(captions_file)
-output_folder = os.path.join(os.getcwd(), 'results', 'sd-30000')
 
-batch_size = 1
-caption_loader = DataLoader(coco_captions, batch_size=batch_size, shuffle=False)
-num_samples = 1
+class CocoCaptionsBlip(Dataset):
+    def __init__(self, json_path):
+        with open(json_path, 'r') as f:
+            self.data = [json.loads(line) for line in f]
 
-model_path = "./sddata/finetune/sd/coco/checkpoint-30000"
-pipe = StableDiffusionPipeline.from_pretrained(
-    model_path, 
-    torch_dtype=torch.float16,
-    safety_checker = None,
-    requires_safety_checker = False)
-pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
-pipe.to("cuda")
+    def __len__(self):
+        return len(self.data)
 
-captions_data = []
-for idx, caption in enumerate(caption_loader):
-    print('[Sample Idx {}/{}]'.format(idx, len(coco_captions)))
-    caption_entry = {"idx": idx, "caption": caption}
-    captions_data.append(caption_entry)
+    def __getitem__(self, idx):
+        return self.data[idx]['prompt']
+    
 
-    # use half the weights from the LoRA finetuned model and half the weights from the base model
-    # image = pipe("giraffe is eating leaves from the tree", num_inference_steps=25, guidance_scale=7.5, cross_attention_kwargs={"scale": 0.5}).images[0]
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--img_ID', type=int, help='Number of samples')
+    args = parser.parse_args()
 
-    # use the weights from the fully finetuned LoRA model
-    # image = pipe(caption, num_inference_steps=25, guidance_scale=7.5).images[0]
+    # captions_file = 'captions_val2017.json' 
+    # coco_captions = CocoCaptions(captions_file)
 
-    image = pipe(prompt=caption, num_inference_steps=25, guidance_scale=7.5).images[0]
+    captions_file = 'prompt_val_blip.json' 
+    coco_captions = CocoCaptionsBlip(captions_file)
 
-    image_path = os.path.join(output_folder, "sample_{}.png".format(str(idx)))
-    image.save(image_path)
+    output_folder = os.path.join(os.getcwd(), 'results', 'sd-30000')
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
 
-    if idx >= 1999:
-        break
+    batch_size = 1
+    caption_loader = DataLoader(coco_captions, batch_size=batch_size, shuffle=False)
+    num_samples = 1
 
-json_file = os.path.join(output_folder, 'captions.json')
-# Write to JSON file
-with open(json_file, 'w') as f:
-    for caption_entry in captions_data:
-        json_line = json.dumps(caption_entry)
-        f.write(json_line + '\n')
+    model_path = "./sddata/finetune/sd/coco/checkpoint-30000"
+    pipe = StableDiffusionPipeline.from_pretrained(
+        model_path, 
+        torch_dtype=torch.float16,
+        safety_checker = None,
+        requires_safety_checker = False)
+    pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
+    pipe.to("cuda")
 
+    pack = range(0, 5000, 500)
+    for index in range(500):
+        start_point = pack[args.img_ID]
+        idx = start_point + index
+        caption = coco_captions[idx]
+
+        # use half the weights from the LoRA finetuned model and half the weights from the base model
+        # image = pipe("giraffe is eating leaves from the tree", num_inference_steps=25, guidance_scale=7.5, cross_attention_kwargs={"scale": 0.5}).images[0]
+
+        # use the weights from the fully finetuned LoRA model
+        # image = pipe(caption, num_inference_steps=25, guidance_scale=7.5).images[0]
+
+        image = pipe(prompt=caption, num_inference_steps=25, guidance_scale=7.5).images[0]
+
+        image_path = os.path.join(output_folder, "sample_{}.png".format(str(idx)))
+        image.save(image_path)
+
+        # if idx >= 1999:
+        #     break
 
 

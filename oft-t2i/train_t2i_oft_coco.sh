@@ -4,7 +4,7 @@ export HF_HOME='/tmp'
 # r=4
 
 export MODEL_NAME="runwayml/stable-diffusion-v1-5"
-export OUTPUT_DIR="./sddata/finetune/oft/coco_8e-05"
+export OUTPUT_DIR="./sddata/finetune/oft/coco_1e-05"
 export HUB_MODEL_ID="pokemon-lora"
 export TRAIN_DIR="./data/COCO"
 
@@ -15,13 +15,13 @@ accelerate launch --mixed_precision="fp16"  train_text_to_image_oft.py \
   --resolution=512 --center_crop --random_flip \
   --train_batch_size=1 \
   --gradient_accumulation_steps=4 \
-  --max_train_steps=200000 \
-  --learning_rate=8e-05 \
+  --max_train_steps=100000 \
+  --learning_rate=1e-05 \
   --max_grad_norm=1 \
   --lr_scheduler="cosine" --lr_warmup_steps=0 \
   --output_dir=${OUTPUT_DIR} \
   --report_to=wandb \
-  --checkpointing_steps=10000 \
+  --checkpointing_steps=5000 \
   --validation_prompt="A pokemon with blue eyes." \
   --seed=1337 \
   --eps=6e-5 \
