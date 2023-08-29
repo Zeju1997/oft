@@ -411,7 +411,7 @@ def project_batch(R, eps=1e-5):
     return out
 
 
-class OFTLinearLayer_orig(nn.Module):
+class OFTLinearLayer(nn.Module):
     def __init__(self, in_features, out_features, bias=False, block_share=False, eps=5e-6, r=4, is_coft=False):
         super(OFTLinearLayer, self).__init__()
 
@@ -423,11 +423,6 @@ class OFTLinearLayer_orig(nn.Module):
 
         assert in_features % self.r == 0, "in_features must be divisible by r"
 
-        # Get the number of available GPUs
-        # self.num_gpus = torch.cuda.device_count()
-        # Set the device IDs for distributed training
-        # self.device_ids = list(range(self.num_gpus))
-
         self.in_features=in_features
         self.out_features=out_features
 
@@ -435,11 +430,7 @@ class OFTLinearLayer_orig(nn.Module):
         self.register_buffer('hidden_size', torch.tensor(out_features))
         self.register_buffer('oft_eps', torch.tensor(eps))
         self.register_buffer('oft_is_coft', torch.tensor(is_coft))
-        
-        # Define the fixed Linear layer: v
-        # self.OPT = torch.nn.Linear(in_features=in_features, out_features=out_features, bias=bias)
 
-        #self.filt_shape = [in_features, in_features]
         self.fix_filt_shape = [in_features, out_features]
 
         self.block_share = block_share
@@ -542,7 +533,7 @@ class OFTLinearLayer_orig(nn.Module):
         identity = torch.eye(tensor.shape[0], device=tensor.device)
         return torch.all(torch.eq(tensor, identity))
 
-class OFTLinearLayer(nn.Module):
+class OFTLinearLayer_mixed_precision(nn.Module):
     def __init__(self, in_features, out_features, bias=False, block_share=False, eps=5e-6, r=4, is_coft=False):
         super(OFTLinearLayer, self).__init__()
 
@@ -641,8 +632,8 @@ class OFTLinearLayer(nn.Module):
         I = torch.eye(r, device=data.device)
 
         # Perform the Cayley parametrization
-        Q = torch.mm(I + skew, torch.inverse(I - skew))
-        # Q = torch.mm(I - skew, torch.inverse(I + skew))
+        Q = torch.mm(I - skew, torch.inverse(I + skew))
+        
         return Q
     
     def cayley_batch(self, data):
@@ -654,7 +645,7 @@ class OFTLinearLayer(nn.Module):
         I = torch.eye(r, device=data.device).unsqueeze(0).expand(b, r, c)
 
         # Perform the Cayley parametrization
-        Q = torch.bmm(I + skew, torch.inverse(I - skew))
+        Q = torch.bmm(I - skew, torch.inverse(I + skew))
 
         # Cast back to the original datatype
         Q = Q.to(orig_dtype)
