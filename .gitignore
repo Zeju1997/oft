@@ -3,8 +3,10 @@
 
 # Ignore folder
 oft-control/log/
+oft-control/oft_butterfly.py
 oft-db/data/
 oft-db/log_cot/
+oft-db/oft_utils/attention_processor_butterfly.py
 oft-t2i/sddata_orig/
 oft-t2i/sddata/
 lightning_logs/

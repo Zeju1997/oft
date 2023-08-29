@@ -499,8 +499,8 @@ class OFTLinearLayer_orig(nn.Module):
         I = torch.eye(r, device=data.device)
 
         # Perform the Cayley parametrization
-        Q = torch.mm(I + skew, torch.inverse(I - skew))
-        # Q = torch.mm(I - skew, torch.inverse(I + skew))
+        Q = torch.mm(I - skew, torch.inverse(I + skew))
+
         return Q
     
     def cayley_batch(self, data):
@@ -511,7 +511,7 @@ class OFTLinearLayer_orig(nn.Module):
         I = torch.eye(r, device=data.device).unsqueeze(0).expand(b, r, c)
 
         # Perform the Cayley parametrization
-        Q = torch.bmm(I + skew, torch.inverse(I - skew))
+        Q = torch.bmm(I - skew, torch.inverse(I + skew))
 
         return Q
 
