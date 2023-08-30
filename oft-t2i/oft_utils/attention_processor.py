@@ -580,12 +580,6 @@ class OFTLinearLayer_mixed_precision(nn.Module):
             self.eps = eps * self.R_shape[1] * self.R_shape[1]
 
     def forward(self, attn, x):
-        # orig_dtype = x.dtype
-        # dtype = self.R.dtype
-
-        # if self.R.dtype != orig_dtype:
-        #     self.R.data = self.R.data.to(orig_dtype)
-
         if self.training:
             if self.block_share:
                 if self.is_coft:
@@ -604,10 +598,7 @@ class OFTLinearLayer_mixed_precision(nn.Module):
         else:
             block_diagonal_matrix = self.block_diagonal(self.R)
 
-        with amp.autocast():  # Re-enable autocast for the rest of the code
-            # Block-diagonal parametrization
-            # block_diagonal_matrix = self.block_diagonal(orth_rotate)
-            
+        with amp.autocast():  # Re-enable autocast for the rest of the code         
             # fix filter
             fix_filt = attn.weight.data
             fix_filt = torch.transpose(fix_filt, 0, 1)
