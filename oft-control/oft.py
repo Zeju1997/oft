@@ -469,8 +469,15 @@ def _find_modules_v2(
             if module.__class__.__name__ in ancestor_class
         )
     else:
+        # the first modules is the most senior father class.
         # this, incase you want to naively iterate over all modules.
-        ancestors = [module for module in model.modules()]
+        for module in model.modules():
+            ancestor_class = module.__class__.__name__[0]
+        ancestors = (
+            module
+            for module in model.modules()
+            if module.__class__.__name__ in ancestor_class
+        )
 
     results = []
     # For each target find every linear_class module that isn't a child of a OFTInjectedLinear
