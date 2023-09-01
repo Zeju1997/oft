@@ -472,7 +472,8 @@ def _find_modules_v2(
         # the first modules is the most senior father class.
         # this, incase you want to naively iterate over all modules.
         for module in model.modules():
-            ancestor_class = module.__class__.__name__[0]
+            ancestor_class = module.__class__.__name__
+            break
         ancestors = (
             module
             for module in model.modules()
