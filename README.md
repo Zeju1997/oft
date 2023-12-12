@@ -5,7 +5,7 @@
 </div>
 
 <p align="center">
-  <a href="https://oft.wyliu.com/static/files/oft_v1.pdf">Paper</a> / <a href="https://arxiv.org/abs/2306.07280">arXiv</a> / <a href="https://oft.wyliu.com">Project Page</a>
+  <a href="https://arxiv.org/abs/2306.07280">arXiv</a> / <a href="https://oft.wyliu.com">Project Page</a>
 </p>
 
 
